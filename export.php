@@ -182,9 +182,13 @@ $availablecolumns = [
     'completeddate' => [
         'header' => get_string('exportheader_completeddate', 'report_idgprogress'),
         'value'  => function($user, $sdata, $ucustom) {
-            return $sdata->timecompleted > 0
-                ? userdate($sdata->timecompleted, get_string('strftimedatetime', 'langconfig'))
-                : get_string('na', 'report_idgprogress');
+            if ($sdata->status === 'completed' && $sdata->timecompleted > 0) {
+                return userdate($sdata->timecompleted, get_string('strftimedatetime', 'langconfig'));
+            }
+            if (!empty($sdata->lastactivitytime) && $sdata->lastactivitytime > 0) {
+                return get_string('lastactivityprefix', 'report_idgprogress') . ': ' . userdate($sdata->lastactivitytime, get_string('strftimedatetime', 'langconfig'));
+            }
+            return get_string('na', 'report_idgprogress');
         },
     ],
 ];

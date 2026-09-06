@@ -55,6 +55,9 @@ $string['table_activities'] = 'សកម្មភាពបានបញ្ចប�
 $string['table_progress'] = 'វឌ្ឍនភាព';
 $string['table_status'] = 'ស្ថានភាពវគ្គសិក្សា';
 $string['table_completeddate'] = 'កាលបរិច្ឆេទបញ្ចប់';
+$string['coursecompleteddate'] = 'កាលបរិច្ឆេទបញ្ចប់វគ្គសិក្សា';
+$string['lastactivitydate'] = 'កាលបរិច្ឆេទបញ្ចប់សកម្មភាពចុងក្រោយ';
+$string['lastactivityprefix'] = 'សកម្មភាព';
 $string['table_actions'] = 'សកម្មភាព';
 $string['viewprofile'] = 'មើលព័ត៌មានរូបសង្ខេប';
 

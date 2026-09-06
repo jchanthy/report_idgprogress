@@ -409,6 +409,21 @@ function report_idgprogress_get_student_completion_data(
         $status = 'notstarted';
     }
 
+    // Find the latest completed activity timestamp.
+    $lastactivitytime = 0;
+    foreach ($activitystates as $actstate) {
+        if (!empty($actstate->iscompleted) && !empty($actstate->timemodified) && (int)$actstate->timemodified > $lastactivitytime) {
+            $lastactivitytime = (int)$actstate->timemodified;
+        }
+    }
+
+    // If student completed all activities but Moodle course_completions record
+    // is missing or cron has not written it yet, fallback to the timestamp of
+    // the final completed activity.
+    if ($status === 'completed' && $timecompleted <= 0) {
+        $timecompleted = $lastactivitytime;
+    }
+
     return (object)[
         'userid'              => (int)$user->id,
         'user'                => $user,
@@ -418,6 +433,7 @@ function report_idgprogress_get_student_completion_data(
         'status'              => $status,
         'iscoursecomplete'    => $iscoursecomplete,
         'timecompleted'       => $timecompleted,
+        'lastactivitytime'    => $lastactivitytime,
         'activitystates'      => $activitystates,
     ];
 }

@@ -404,7 +404,20 @@ if (empty($pagedusers)) {
                     $activitiesratio = $studentdata->completedactivities . ' / ' . $studentdata->totalactivities;
                     $progressbar = report_idgprogress_render_progress_bar($studentdata->percentage, $studentdata->status);
                     $statusbadge = report_idgprogress_render_status_badge($studentdata->status);
-                    $completeddate = $studentdata->timecompleted > 0 ? userdate($studentdata->timecompleted, get_string('strftimedatetime', 'langconfig')) : '-';
+                    if ($studentdata->status === 'completed' && $studentdata->timecompleted > 0) {
+                        $completeddatehtml = '<span class="text-success fw-bold" title="' . s(get_string('coursecompleteddate', 'report_idgprogress')) . '">'
+                            . '<i class="fa fa-check-circle text-success mr-1 me-1"></i>'
+                            . s(userdate($studentdata->timecompleted, get_string('strftimedatetime', 'langconfig')))
+                            . '</span>';
+                    } elseif (!empty($studentdata->lastactivitytime) && $studentdata->lastactivitytime > 0) {
+                        $completeddatehtml = '<span class="text-secondary" title="' . s(get_string('lastactivitydate', 'report_idgprogress')) . '">'
+                            . '<i class="fa fa-clock-o text-muted mr-1 me-1"></i>'
+                            . '<span class="text-muted small">' . s(get_string('lastactivityprefix', 'report_idgprogress')) . ': </span>'
+                            . s(userdate($studentdata->lastactivitytime, get_string('strftimedatetime', 'langconfig')))
+                            . '</span>';
+                    } else {
+                        $completeddatehtml = '<span class="text-muted">-</span>';
+                    }
                     ?>
                     <tr>
                         <td>
@@ -436,7 +449,7 @@ if (empty($pagedusers)) {
                             <?php echo $statusbadge; ?>
                         </td>
                         <td>
-                            <span class="small text-muted"><?php echo s($completeddate); ?></span>
+                            <span class="small"><?php echo $completeddatehtml; ?></span>
                         </td>
                     </tr>
                     <?php

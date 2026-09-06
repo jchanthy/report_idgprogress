@@ -55,6 +55,9 @@ $string['table_activities'] = 'Completed Activities';
 $string['table_progress'] = 'Progress';
 $string['table_status'] = 'Course Status';
 $string['table_completeddate'] = 'Completed Date';
+$string['coursecompleteddate'] = 'Course completed date';
+$string['lastactivitydate'] = 'Last activity completion date';
+$string['lastactivityprefix'] = 'Activity';
 $string['table_actions'] = 'Actions';
 $string['viewprofile'] = 'View profile';
 
