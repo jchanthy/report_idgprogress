@@ -88,5 +88,28 @@ $string['exportheader_completeddate'] = 'Course Completed Date';
 $string['customfield_header_prefix'] = 'Profile: {$a}';
 $string['activity_header_prefix'] = 'Activity: {$a}';
 
+// Export options and dialog.
+$string['exportoptions'] = 'Export Report';
+$string['exportformat'] = 'Export Format';
+$string['formatexcel'] = 'Microsoft Excel (.xlsx)';
+$string['formatcsv'] = 'CSV with BOM (.csv)';
+$string['selectfields'] = 'Select Fields to Export';
+$string['selectall'] = 'Select All';
+$string['deselectall'] = 'Deselect All';
+$string['field_userid'] = 'User ID';
+$string['field_username'] = 'Username';
+$string['field_fullname'] = 'Full Name';
+$string['field_gender'] = 'Gender';
+$string['field_email'] = 'Email';
+$string['field_institution'] = 'Institution / Ministry';
+$string['field_department'] = 'Department / Unit';
+$string['field_activities_count'] = 'Completed Activities Count';
+$string['field_progress'] = 'Progress Percentage (%)';
+$string['field_coursestatus'] = 'Course Completion Status';
+$string['field_completeddate'] = 'Course Completed Date';
+$string['field_activities_detail'] = 'Individual Tracked Activities';
+$string['download'] = 'Download';
+$string['cancel'] = 'Cancel';
+
 // Privacy metadata.
 $string['privacy:metadata'] = 'The IDG Progress Report plugin displays existing completion and enrollment data and does not store any personal data of its own.';

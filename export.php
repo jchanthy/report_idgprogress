@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * CSV Export script with UTF-8 BOM for IDG Progress Report.
+ * Export script with field selection supporting Excel (.xlsx) and CSV with UTF-8 BOM.
  *
  * @package    report_idgprogress
  * @copyright  2024 Cambodia Academy of Digital Technology (CADT)
@@ -24,11 +24,21 @@
 
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/completionlib.php');
+require_once($CFG->libdir . '/excellib.class.php');
 require_once(__DIR__ . '/lib.php');
 
-$id      = required_param('id', PARAM_INT);
-$groupid = optional_param('group', 0, PARAM_INT);
-$search  = optional_param('search', '', PARAM_NOTAGS);
+$id              = required_param('id', PARAM_INT);
+$groupid         = optional_param('group', 0, PARAM_INT);
+$search          = optional_param('search', '', PARAM_NOTAGS);
+$format          = optional_param('format', 'excel', PARAM_ALPHA);
+$requestedfields = optional_param_array('fields', [], PARAM_ALPHANUMEXT);
+
+if ($format === 'xlsx') {
+    $format = 'excel';
+}
+if (!in_array($format, ['excel', 'csv'], true)) {
+    $format = 'excel';
+}
 
 // Validate course and permissions.
 $course = $DB->get_record('course', ['id' => $id], '*', MUST_EXIST);
@@ -79,121 +89,228 @@ foreach ($customprofilefields as $cf) {
     }
 }
 
-// Release session lock before initiating file stream.
+// If no fields specified (direct URL call), default to all standard fields.
+if (empty($requestedfields)) {
+    $requestedfields = [
+        'userid', 'username', 'fullname', 'gender', 'email',
+        'institution', 'department', 'activities_count',
+        'progress', 'coursestatus', 'completeddate', 'activities_detail'
+    ];
+    foreach ($othercustomfields as $cf) {
+        $requestedfields[] = 'custom_' . $cf->shortname;
+    }
+}
+
+// Construct export columns definition.
+$columns = [];
+
+if (in_array('userid', $requestedfields, true)) {
+    $columns['userid'] = [
+        'header' => get_string('exportheader_userid', 'report_idgprogress'),
+        'value'  => fn($user, $sdata, $ucustom) => $user->id,
+    ];
+}
+if (in_array('username', $requestedfields, true)) {
+    $columns['username'] = [
+        'header' => get_string('exportheader_username', 'report_idgprogress'),
+        'value'  => fn($user, $sdata, $ucustom) => $user->username,
+    ];
+}
+if (in_array('fullname', $requestedfields, true)) {
+    $columns['fullname'] = [
+        'header' => get_string('exportheader_fullname', 'report_idgprogress'),
+        'value'  => fn($user, $sdata, $ucustom) => fullname($user),
+    ];
+}
+if (in_array('gender', $requestedfields, true)) {
+    $columns['gender'] = [
+        'header' => get_string('exportheader_gender', 'report_idgprogress'),
+        'value'  => function($user, $sdata, $ucustom) {
+            $g = report_idgprogress_get_user_gender($user, $ucustom);
+            return $g !== '-' ? $g : '';
+        },
+    ];
+}
+if (in_array('email', $requestedfields, true)) {
+    $columns['email'] = [
+        'header' => get_string('exportheader_email', 'report_idgprogress'),
+        'value'  => fn($user, $sdata, $ucustom) => $user->email,
+    ];
+}
+if (in_array('institution', $requestedfields, true)) {
+    $columns['institution'] = [
+        'header' => get_string('exportheader_institution', 'report_idgprogress'),
+        'value'  => fn($user, $sdata, $ucustom) => !empty($user->institution) ? $user->institution : '',
+    ];
+}
+if (in_array('department', $requestedfields, true)) {
+    $columns['department'] = [
+        'header' => get_string('exportheader_department', 'report_idgprogress'),
+        'value'  => fn($user, $sdata, $ucustom) => !empty($user->department) ? $user->department : '',
+    ];
+}
+
+// Custom profile fields.
+foreach ($othercustomfields as $cf) {
+    $fieldkey = 'custom_' . $cf->shortname;
+    if (in_array($fieldkey, $requestedfields, true) || in_array('all_custom', $requestedfields, true)) {
+        $fieldname = strip_tags(format_string($cf->name, true, ['context' => $context]));
+        $columns[$fieldkey] = [
+            'header' => get_string('customfield_header_prefix', 'report_idgprogress', $fieldname),
+            'value'  => fn($user, $sdata, $ucustom) => !empty($ucustom[$cf->shortname]) ? (string)$ucustom[$cf->shortname] : '',
+        ];
+    }
+}
+
+if (in_array('activities_count', $requestedfields, true)) {
+    $columns['completedactivities'] = [
+        'header' => get_string('exportheader_completedactivities', 'report_idgprogress'),
+        'value'  => fn($user, $sdata, $ucustom) => $sdata->completedactivities,
+    ];
+    $columns['totalactivities'] = [
+        'header' => get_string('exportheader_totalactivities', 'report_idgprogress'),
+        'value'  => fn($user, $sdata, $ucustom) => $sdata->totalactivities,
+    ];
+}
+if (in_array('progress', $requestedfields, true)) {
+    $columns['progress'] = [
+        'header' => get_string('exportheader_progress', 'report_idgprogress'),
+        'value'  => fn($user, $sdata, $ucustom) => $sdata->percentage . '%',
+    ];
+}
+if (in_array('coursestatus', $requestedfields, true)) {
+    $columns['coursestatus'] = [
+        'header' => get_string('exportheader_coursestatus', 'report_idgprogress'),
+        'value'  => fn($user, $sdata, $ucustom) => get_string('status_' . $sdata->status, 'report_idgprogress'),
+    ];
+}
+if (in_array('completeddate', $requestedfields, true)) {
+    $columns['completeddate'] = [
+        'header' => get_string('exportheader_completeddate', 'report_idgprogress'),
+        'value'  => fn($user, $sdata, $ucustom) => $sdata->timecompleted > 0
+            ? userdate($sdata->timecompleted, get_string('strftimedatetime', 'langconfig'))
+            : get_string('na', 'report_idgprogress'),
+    ];
+}
+
+// Individual activity details.
+if (in_array('activities_detail', $requestedfields, true)) {
+    foreach ($trackedactivities as $cmid => $activity) {
+        $actname = strip_tags(format_string($activity->name, true, ['context' => $context]));
+        $columns['act_' . $cmid] = [
+            'header' => get_string('activity_header_prefix', 'report_idgprogress', $actname),
+            'value'  => function($user, $sdata, $ucustom) use ($cmid) {
+                if (isset($sdata->activitystates[$cmid])) {
+                    $astate = $sdata->activitystates[$cmid];
+                    if ($astate->iscompleted) {
+                        $datestr = $astate->timemodified > 0
+                            ? userdate($astate->timemodified, get_string('strftimedatetime', 'langconfig'))
+                            : '';
+                        return get_string('completed', 'report_idgprogress') . ($datestr ? ' (' . $datestr . ')' : '');
+                    }
+                    return get_string('notcompleted', 'report_idgprogress');
+                }
+                return get_string('na', 'report_idgprogress');
+            },
+        ];
+    }
+}
+
+// Release session lock before long file streaming.
 \core\session\manager::write_close();
 
-// Clear any existing output buffers to guarantee BOM is at byte 0.
-while (ob_get_level()) {
-    ob_end_clean();
-}
-
-// Generate sanitized filename.
 $filenamebase = get_string('exportfilename', 'report_idgprogress');
-$filename = clean_filename("{$filenamebase}_{$course->shortname}_" . date('Ymd_His') . '.csv');
 
-// Set HTTP headers for UTF-8 CSV attachment.
-header('Content-Type: text/csv; charset=UTF-8');
-header('Content-Disposition: attachment; filename="' . $filename . '"');
-header('Cache-Control: max-age=0, no-cache, no-store, must-revalidate');
-header('Pragma: no-cache');
-header('Expires: 0');
+if ($format === 'excel') {
+    // 1. EXCEL (.xlsx) EXPORT VIA MoodleExcelWorkbook
+    $filename = clean_filename("{$filenamebase}_{$course->shortname}_" . date('Ymd_His') . '.xlsx');
+    $workbook = new MoodleExcelWorkbook($filename);
+    $worksheetname = clean_param(mb_substr($course->shortname, 0, 31), PARAM_ALPHANUMEXT);
+    if (empty($worksheetname)) {
+        $worksheetname = 'Progress';
+    }
+    $worksheet = $workbook->add_worksheet($worksheetname);
 
-// CRITICAL: Output the UTF-8 Byte Order Mark (BOM) at byte 0.
-// This ensures Microsoft Excel properly renders Khmer Unicode (\u1780-\u17FF) and international text.
-echo "\xEF\xBB\xBF";
+    // Styling format for header.
+    $format_header = $workbook->add_format([
+        'bold'   => 1,
+        'size'   => 11,
+        'align'  => 'left',
+        'bottom' => 2,
+    ]);
 
-// Open output stream.
-$output = fopen('php://output', 'w');
-
-// Prepare base header row.
-$headers = [
-    get_string('exportheader_userid', 'report_idgprogress'),
-    get_string('exportheader_username', 'report_idgprogress'),
-    get_string('exportheader_fullname', 'report_idgprogress'),
-    get_string('exportheader_gender', 'report_idgprogress'),
-    get_string('exportheader_email', 'report_idgprogress'),
-    get_string('exportheader_institution', 'report_idgprogress'),
-    get_string('exportheader_department', 'report_idgprogress'),
-];
-
-// Append any other custom profile field headers.
-foreach ($othercustomfields as $cf) {
-    $fieldname = strip_tags(format_string($cf->name, true, ['context' => $context]));
-    $headers[] = get_string('customfield_header_prefix', 'report_idgprogress', $fieldname);
-}
-
-$headers[] = get_string('exportheader_completedactivities', 'report_idgprogress');
-$headers[] = get_string('exportheader_totalactivities', 'report_idgprogress');
-$headers[] = get_string('exportheader_progress', 'report_idgprogress');
-$headers[] = get_string('exportheader_coursestatus', 'report_idgprogress');
-$headers[] = get_string('exportheader_completeddate', 'report_idgprogress');
-
-// Append tracked activity names to header row.
-foreach ($trackedactivities as $activity) {
-    $activityname = strip_tags(format_string($activity->name, true, ['context' => $context]));
-    $headers[] = get_string('activity_header_prefix', 'report_idgprogress', $activityname);
-}
-
-// Write header to CSV.
-fputcsv($output, $headers);
-
-// Stream data rows.
-foreach ($users as $user) {
-    $studentdata = report_idgprogress_get_student_completion_data(
-        $course,
-        $completion,
-        $trackedactivities,
-        $user
-    );
-
-    $completeddatestr = $studentdata->timecompleted > 0
-        ? userdate($studentdata->timecompleted, get_string('strftimedatetime', 'langconfig'))
-        : get_string('na', 'report_idgprogress');
-
-    $statuslabel = get_string('status_' . $studentdata->status, 'report_idgprogress');
-    $usercustom = $alluserscustomfields[$user->id] ?? [];
-    $gender = report_idgprogress_get_user_gender($user, $usercustom);
-
-    $row = [
-        $user->id,
-        $user->username,
-        fullname($user),
-        $gender !== '-' ? $gender : '',
-        $user->email,
-        !empty($user->institution) ? $user->institution : '',
-        !empty($user->department) ? $user->department : '',
-    ];
-
-    // Append other custom profile field values.
-    foreach ($othercustomfields as $shortname => $cf) {
-        $row[] = !empty($usercustom[$shortname]) ? (string)$usercustom[$shortname] : '';
+    // Write header row.
+    $colidx = 0;
+    foreach ($columns as $col) {
+        $worksheet->write_string(0, $colidx, $col['header'], $format_header);
+        $colidx++;
     }
 
-    $row[] = $studentdata->completedactivities;
-    $row[] = $studentdata->totalactivities;
-    $row[] = $studentdata->percentage . '%';
-    $row[] = $statuslabel;
-    $row[] = $completeddatestr;
-
-    // Append individual activity completion details.
-    foreach ($trackedactivities as $cmid => $activity) {
-        if (isset($studentdata->activitystates[$cmid])) {
-            $astate = $studentdata->activitystates[$cmid];
-            if ($astate->iscompleted) {
-                $activitydatestr = $astate->timemodified > 0
-                    ? userdate($astate->timemodified, get_string('strftimedatetime', 'langconfig'))
-                    : '';
-                $row[] = get_string('completed', 'report_idgprogress') . ($activitydatestr ? ' (' . $activitydatestr . ')' : '');
+    // Write data rows.
+    $rowidx = 1;
+    foreach ($users as $user) {
+        $studentdata = report_idgprogress_get_student_completion_data(
+            $course,
+            $completion,
+            $trackedactivities,
+            $user
+        );
+        $usercustom = $alluserscustomfields[$user->id] ?? [];
+        $colidx = 0;
+        foreach ($columns as $col) {
+            $val = $col['value']($user, $studentdata, $usercustom);
+            if (is_numeric($val) && !is_string($val)) {
+                $worksheet->write_number($rowidx, $colidx, $val);
             } else {
-                $row[] = get_string('notcompleted', 'report_idgprogress');
+                $worksheet->write_string($rowidx, $colidx, (string)$val);
             }
-        } else {
-            $row[] = get_string('na', 'report_idgprogress');
+            $colidx++;
         }
+        $rowidx++;
     }
 
-    fputcsv($output, $row);
-}
+    $workbook->close();
+    exit;
 
-fclose($output);
-exit;
+} else {
+    // 2. CSV EXPORT WITH UTF-8 BOM PRESERVATION
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+
+    $filename = clean_filename("{$filenamebase}_{$course->shortname}_" . date('Ymd_His') . '.csv');
+
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Cache-Control: max-age=0, no-cache, no-store, must-revalidate');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+
+    // CRITICAL: Output the UTF-8 Byte Order Mark (BOM) at byte 0.
+    echo "\xEF\xBB\xBF";
+
+    $output = fopen('php://output', 'w');
+
+    // Write header row.
+    $headerrow = array_map(fn($c) => $c['header'], $columns);
+    fputcsv($output, $headerrow);
+
+    // Stream data rows.
+    foreach ($users as $user) {
+        $studentdata = report_idgprogress_get_student_completion_data(
+            $course,
+            $completion,
+            $trackedactivities,
+            $user
+        );
+        $usercustom = $alluserscustomfields[$user->id] ?? [];
+        $row = [];
+        foreach ($columns as $col) {
+            $row[] = $col['value']($user, $studentdata, $usercustom);
+        }
+        fputcsv($output, $row);
+    }
+
+    fclose($output);
+    exit;
+}

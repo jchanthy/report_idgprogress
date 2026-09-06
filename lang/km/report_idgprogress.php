@@ -88,5 +88,28 @@ $string['exportheader_completeddate'] = 'កាលបរិច្ឆេទបញ
 $string['customfield_header_prefix'] = 'ព័ត៌មានបន្ថែម: {$a}';
 $string['activity_header_prefix'] = 'សកម្មភាព: {$a}';
 
+// Export options and dialog.
+$string['exportoptions'] = 'ទាញយករបាយការណ៍';
+$string['exportformat'] = 'ទម្រង់ឯកសារ';
+$string['formatexcel'] = 'Microsoft Excel (.xlsx)';
+$string['formatcsv'] = 'CSV គាំទ្រភាសាខ្មែរ (.csv)';
+$string['selectfields'] = 'ជ្រើសរើសទិន្នន័យសម្រាប់ទាញយក';
+$string['selectall'] = 'ជ្រើសរើសទាំងអស់';
+$string['deselectall'] = 'ដោះការជ្រើសរើស';
+$string['field_userid'] = 'អត្តសញ្ញាណអ្នកប្រើប្រាស់';
+$string['field_username'] = 'ឈ្មោះគណនី';
+$string['field_fullname'] = 'ឈ្មោះពេញ';
+$string['field_gender'] = 'ភេទ';
+$string['field_email'] = 'អ៊ីមែល';
+$string['field_institution'] = 'ស្ថាប័ន / ក្រសួង';
+$string['field_department'] = 'នាយកដ្ឋាន / អង្គភាព';
+$string['field_activities_count'] = 'ចំនួនសកម្មភាពបានបញ្ចប់';
+$string['field_progress'] = 'ភាគរយវឌ្ឍនភាព (%)';
+$string['field_coursestatus'] = 'ស្ថានភាពបញ្ចប់វគ្គសិក្សា';
+$string['field_completeddate'] = 'កាលបរិច្ឆេទបញ្ចប់វគ្គសិក្សា';
+$string['field_activities_detail'] = 'ព័ត៌មានលម្អិតនៃសកម្មភាពនីមួយៗ';
+$string['download'] = 'ទាញយក';
+$string['cancel'] = 'បោះបង់';
+
 // Privacy metadata.
 $string['privacy:metadata'] = 'កម្មវិធីជំនួយរបាយការណ៍វឌ្ឍនភាព IDG បង្ហាញតែទិន្នន័យការបញ្ចប់ និងការចុះឈ្មោះដែលមានស្រាប់ ហើយមិនរក្សាទុកទិន្នន័យផ្ទាល់ខ្លួនណាមួយឡើយ។';
