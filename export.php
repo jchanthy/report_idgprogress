@@ -84,7 +84,8 @@ $customprofilefields = report_idgprogress_get_custom_profile_fields();
 $othercustomfields = [];
 foreach ($customprofilefields as $cf) {
     $ls = strtolower($cf->shortname);
-    if ($ls !== 'gender' && $ls !== 'sex' && !str_contains($ls, 'gender') && !str_contains($ls, 'sex')) {
+    $hasgender = ($ls === 'gender' || $ls === 'sex' || strpos($ls, 'gender') !== false || strpos($ls, 'sex') !== false);
+    if (!$hasgender) {
         $othercustomfields[$cf->shortname] = $cf;
     }
 }
@@ -107,19 +108,25 @@ $columns = [];
 if (in_array('userid', $requestedfields, true)) {
     $columns['userid'] = [
         'header' => get_string('exportheader_userid', 'report_idgprogress'),
-        'value'  => fn($user, $sdata, $ucustom) => $user->id,
+        'value'  => function($user, $sdata, $ucustom) {
+            return $user->id;
+        },
     ];
 }
 if (in_array('username', $requestedfields, true)) {
     $columns['username'] = [
         'header' => get_string('exportheader_username', 'report_idgprogress'),
-        'value'  => fn($user, $sdata, $ucustom) => $user->username,
+        'value'  => function($user, $sdata, $ucustom) {
+            return $user->username;
+        },
     ];
 }
 if (in_array('fullname', $requestedfields, true)) {
     $columns['fullname'] = [
         'header' => get_string('exportheader_fullname', 'report_idgprogress'),
-        'value'  => fn($user, $sdata, $ucustom) => fullname($user),
+        'value'  => function($user, $sdata, $ucustom) {
+            return fullname($user);
+        },
     ];
 }
 if (in_array('gender', $requestedfields, true)) {
@@ -134,19 +141,25 @@ if (in_array('gender', $requestedfields, true)) {
 if (in_array('email', $requestedfields, true)) {
     $columns['email'] = [
         'header' => get_string('exportheader_email', 'report_idgprogress'),
-        'value'  => fn($user, $sdata, $ucustom) => $user->email,
+        'value'  => function($user, $sdata, $ucustom) {
+            return $user->email;
+        },
     ];
 }
 if (in_array('institution', $requestedfields, true)) {
     $columns['institution'] = [
         'header' => get_string('exportheader_institution', 'report_idgprogress'),
-        'value'  => fn($user, $sdata, $ucustom) => !empty($user->institution) ? $user->institution : '',
+        'value'  => function($user, $sdata, $ucustom) {
+            return !empty($user->institution) ? $user->institution : '';
+        },
     ];
 }
 if (in_array('department', $requestedfields, true)) {
     $columns['department'] = [
         'header' => get_string('exportheader_department', 'report_idgprogress'),
-        'value'  => fn($user, $sdata, $ucustom) => !empty($user->department) ? $user->department : '',
+        'value'  => function($user, $sdata, $ucustom) {
+            return !empty($user->department) ? $user->department : '';
+        },
     ];
 }
 
@@ -155,9 +168,12 @@ foreach ($othercustomfields as $cf) {
     $fieldkey = 'custom_' . $cf->shortname;
     if (in_array($fieldkey, $requestedfields, true) || in_array('all_custom', $requestedfields, true)) {
         $fieldname = strip_tags(format_string($cf->name, true, ['context' => $context]));
+        $cfshortname = $cf->shortname;
         $columns[$fieldkey] = [
             'header' => $fieldname,
-            'value'  => fn($user, $sdata, $ucustom) => !empty($ucustom[$cf->shortname]) ? (string)$ucustom[$cf->shortname] : '',
+            'value'  => function($user, $sdata, $ucustom) use ($cfshortname) {
+                return !empty($ucustom[$cfshortname]) ? (string)$ucustom[$cfshortname] : '';
+            },
         ];
     }
 }
@@ -165,31 +181,41 @@ foreach ($othercustomfields as $cf) {
 if (in_array('activities_count', $requestedfields, true)) {
     $columns['completedactivities'] = [
         'header' => get_string('exportheader_completedactivities', 'report_idgprogress'),
-        'value'  => fn($user, $sdata, $ucustom) => $sdata->completedactivities,
+        'value'  => function($user, $sdata, $ucustom) {
+            return $sdata->completedactivities;
+        },
     ];
     $columns['totalactivities'] = [
         'header' => get_string('exportheader_totalactivities', 'report_idgprogress'),
-        'value'  => fn($user, $sdata, $ucustom) => $sdata->totalactivities,
+        'value'  => function($user, $sdata, $ucustom) {
+            return $sdata->totalactivities;
+        },
     ];
 }
 if (in_array('progress', $requestedfields, true)) {
     $columns['progress'] = [
         'header' => get_string('exportheader_progress', 'report_idgprogress'),
-        'value'  => fn($user, $sdata, $ucustom) => $sdata->percentage . '%',
+        'value'  => function($user, $sdata, $ucustom) {
+            return $sdata->percentage . '%';
+        },
     ];
 }
 if (in_array('coursestatus', $requestedfields, true)) {
     $columns['coursestatus'] = [
         'header' => get_string('exportheader_coursestatus', 'report_idgprogress'),
-        'value'  => fn($user, $sdata, $ucustom) => get_string('status_' . $sdata->status, 'report_idgprogress'),
+        'value'  => function($user, $sdata, $ucustom) {
+            return get_string('status_' . $sdata->status, 'report_idgprogress');
+        },
     ];
 }
 if (in_array('completeddate', $requestedfields, true)) {
     $columns['completeddate'] = [
         'header' => get_string('exportheader_completeddate', 'report_idgprogress'),
-        'value'  => fn($user, $sdata, $ucustom) => $sdata->timecompleted > 0
-            ? userdate($sdata->timecompleted, get_string('strftimedatetime', 'langconfig'))
-            : get_string('na', 'report_idgprogress'),
+        'value'  => function($user, $sdata, $ucustom) {
+            return $sdata->timecompleted > 0
+                ? userdate($sdata->timecompleted, get_string('strftimedatetime', 'langconfig'))
+                : get_string('na', 'report_idgprogress');
+        },
     ];
 }
 
@@ -292,7 +318,7 @@ if ($format === 'excel') {
     $output = fopen('php://output', 'w');
 
     // Write header row.
-    $headerrow = array_map(fn($c) => $c['header'], $columns);
+    $headerrow = array_column($columns, 'header');
     fputcsv($output, $headerrow);
 
     // Stream data rows.

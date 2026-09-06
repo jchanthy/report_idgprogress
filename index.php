@@ -393,7 +393,7 @@ $sitecustomfields = report_idgprogress_get_custom_profile_fields();
                             <?php
                             foreach ($sitecustomfields as $cf):
                                 $ls = strtolower($cf->shortname);
-                                if ($ls === 'gender' || $ls === 'sex' || str_contains($ls, 'gender') || str_contains($ls, 'sex')) {
+                                if ($ls === 'gender' || $ls === 'sex' || strpos($ls, 'gender') !== false || strpos($ls, 'sex') !== false) {
                                     continue;
                                 }
                                 $cfname = format_string($cf->name);

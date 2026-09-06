@@ -364,11 +364,17 @@ function report_idgprogress_calculate_summary_metrics(
  * @return string HTML output.
  */
 function report_idgprogress_render_progress_bar(float $percentage, string $status): string {
-    $colorclass = match ($status) {
-        'completed'  => 'bg-success',
-        'inprogress' => 'bg-info',
-        default      => 'bg-secondary',
-    };
+    switch ($status) {
+        case 'completed':
+            $colorclass = 'bg-success';
+            break;
+        case 'inprogress':
+            $colorclass = 'bg-info';
+            break;
+        default:
+            $colorclass = 'bg-secondary';
+            break;
+    }
 
     $percenttext = $percentage . '%';
 
@@ -389,11 +395,17 @@ function report_idgprogress_render_progress_bar(float $percentage, string $statu
  * @return string HTML output.
  */
 function report_idgprogress_render_status_badge(string $status): string {
-    $badgetype = match ($status) {
-        'completed'  => 'badge bg-success badge-success text-white',
-        'inprogress' => 'badge bg-primary badge-primary text-white',
-        default      => 'badge bg-secondary badge-secondary text-white',
-    };
+    switch ($status) {
+        case 'completed':
+            $badgetype = 'badge bg-success badge-success text-white';
+            break;
+        case 'inprogress':
+            $badgetype = 'badge bg-primary badge-primary text-white';
+            break;
+        default:
+            $badgetype = 'badge bg-secondary badge-secondary text-white';
+            break;
+    }
 
     $label = get_string('status_' . $status, 'report_idgprogress');
 
@@ -507,7 +519,8 @@ function report_idgprogress_get_user_gender(stdClass $user, array $usercustomfie
     // 2. Check case-insensitively across custom fields.
     foreach ($usercustomfields as $k => $v) {
         $lk = strtolower($k);
-        if (($lk === 'gender' || $lk === 'sex' || str_contains($lk, 'gender') || str_contains($lk, 'sex') || str_contains($k, 'ភេទ')) && !empty($v)) {
+        $hasgender = ($lk === 'gender' || $lk === 'sex' || strpos($lk, 'gender') !== false || strpos($lk, 'sex') !== false || strpos($k, 'ភេទ') !== false);
+        if ($hasgender && !empty($v)) {
             return trim((string)$v);
         }
     }
