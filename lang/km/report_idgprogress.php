@@ -111,5 +111,18 @@ $string['field_activities_detail'] = 'ព័ត៌មានលម្អិតន
 $string['download'] = 'ទាញយក';
 $string['cancel'] = 'បោះបង់';
 
+// Progress filter for export.
+$string['filterbyprogress'] = 'ច្រោះសិស្សតាមវឌ្ឍនភាព';
+$string['filter_all'] = 'សិស្សទាំងអស់ (គ្រប់កម្រិតវឌ្ឍនភាព)';
+$string['filter_inprogress'] = 'កំពុងសិក្សាតែប៉ុណ្ណោះ (១% - ៩៩%)';
+$string['filter_completed'] = 'បានបញ្ចប់តែប៉ុណ្ណោះ (១០០%)';
+$string['filter_notstarted'] = 'មិនទាន់ចាប់ផ្តើម (០%)';
+$string['filter_under100'] = 'វឌ្ឍនភាពក្រោម ១០០% (< ១០០%)';
+$string['filter_under50'] = 'វឌ្ឍនភាពក្រោម ៥០% (< ៥០%)';
+$string['filter_custom'] = 'កំណត់ចន្លោះភាគរយវឌ្ឍនភាព (%)';
+$string['minprogress'] = 'វឌ្ឍនភាពអប្បបរមា (%)';
+$string['maxprogress'] = 'វឌ្ឍនភាពអតិបរមា (%)';
+
+
 // Privacy metadata.
 $string['privacy:metadata'] = 'កម្មវិធីជំនួយរបាយការណ៍វឌ្ឍនភាព IDG បង្ហាញតែទិន្នន័យការបញ្ចប់ និងការចុះឈ្មោះដែលមានស្រាប់ ហើយមិនរក្សាទុកទិន្នន័យផ្ទាល់ខ្លួនណាមួយឡើយ។';

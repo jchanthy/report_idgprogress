@@ -111,5 +111,18 @@ $string['field_activities_detail'] = 'Individual Tracked Activities';
 $string['download'] = 'Download';
 $string['cancel'] = 'Cancel';
 
+// Progress filter for export.
+$string['filterbyprogress'] = 'Filter Students by Progress';
+$string['filter_all'] = 'All Students (All Progress)';
+$string['filter_inprogress'] = 'In Progress Only (1% - 99%)';
+$string['filter_completed'] = 'Completed Only (100%)';
+$string['filter_notstarted'] = 'Not Started Only (0%)';
+$string['filter_under100'] = 'Under 100% Progress (< 100%)';
+$string['filter_under50'] = 'Under 50% Progress (< 50%)';
+$string['filter_custom'] = 'Custom Progress Range (%)';
+$string['minprogress'] = 'Min Progress (%)';
+$string['maxprogress'] = 'Max Progress (%)';
+
+
 // Privacy metadata.
 $string['privacy:metadata'] = 'The IDG Progress Report plugin displays existing completion and enrollment data and does not store any personal data of its own.';

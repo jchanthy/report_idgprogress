@@ -133,9 +133,31 @@
     vertical-align: middle !important;
 }
 
+/* Icon Spacing Normalization */
+.idg-toolbar-card .btn i,
+.idg-toolbar-card .btn .fa,
+.idg-btn-export i,
+.idg-btn-export .fa,
+.idg-search-form .btn i,
+.idg-search-form .btn .fa,
+#idgExportModal .btn i,
+#idgExportModal .btn .fa,
+#idgExportModal .modal-header .fa,
+#idgExportModal .form-check-label .fa {
+    margin-right: 0.5rem !important;
+}
+
+/* Modal Styling */
+#idgExportModal .form-select,
+#idgExportModal select {
+    height: 38px;
+    border-radius: 0.375rem;
+}
+
 /* Responsive Mobile Layout */
 @media (max-width: 767.98px) {
     .idg-toolbar-card .idg-btn-export {
         width: 100% !important;
     }
 }
+

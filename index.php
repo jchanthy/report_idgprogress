@@ -237,6 +237,27 @@ $cohortcache = $metrics->cohortcache ?? null;
     border-radius: 0.375rem !important;
     vertical-align: middle !important;
 }
+/* Icon Spacing Normalization */
+.idg-toolbar-card .btn i,
+.idg-toolbar-card .btn .fa,
+.idg-btn-export i,
+.idg-btn-export .fa,
+.idg-search-form .btn i,
+.idg-search-form .btn .fa,
+.modal .btn i,
+.modal .btn .fa,
+.modal .modal-header .fa,
+.modal .form-check-label .fa {
+    margin-right: 0.5rem !important;
+}
+
+/* Modal Styling */
+.modal .form-select,
+.modal select {
+    height: 38px;
+    border-radius: 0.375rem;
+}
+
 @media (max-width: 767.98px) {
     .idg-toolbar-card .idg-btn-export {
         width: 100% !important;
@@ -266,7 +287,7 @@ $cohortcache = $metrics->cohortcache ?? null;
                                    value="<?php echo s($search); ?>" />
                             <div class="input-group-append">
                                 <button type="submit" class="btn btn-secondary text-nowrap">
-                                    <i class="fa fa-search" aria-hidden="true"></i> <?php echo s(get_string('search', 'report_idgprogress')); ?>
+                                    <i class="fa fa-search mr-2 me-2" aria-hidden="true"></i><span><?php echo s(get_string('search', 'report_idgprogress')); ?></span>
                                 </button>
                                 <?php if ($search !== ''): ?>
                                     <a href="<?php echo s(new moodle_url('/report/idgprogress/index.php', ['id' => $course->id, 'group' => $groupid])); ?>"
@@ -284,7 +305,7 @@ $cohortcache = $metrics->cohortcache ?? null;
                             data-bs-toggle="modal" data-bs-target="#idgExportModal"
                             data-toggle="modal" data-target="#idgExportModal"
                             onclick="report_idgprogress_open_export_modal()">
-                        <i class="fa fa-download me-1" aria-hidden="true"></i> <?php echo s(report_idgprogress_str('exportoptions', 'Export Report')); ?>
+                        <i class="fa fa-download mr-2 me-2" aria-hidden="true"></i><span><?php echo s(report_idgprogress_str('exportoptions', 'Export Report')); ?></span>
                     </button>
                 </div>
             <?php else: ?>
@@ -297,7 +318,7 @@ $cohortcache = $metrics->cohortcache ?? null;
                                    value="<?php echo s($search); ?>" />
                             <div class="input-group-append">
                                 <button type="submit" class="btn btn-secondary text-nowrap">
-                                    <i class="fa fa-search" aria-hidden="true"></i> <?php echo s(get_string('search', 'report_idgprogress')); ?>
+                                    <i class="fa fa-search mr-2 me-2" aria-hidden="true"></i><span><?php echo s(get_string('search', 'report_idgprogress')); ?></span>
                                 </button>
                                 <?php if ($search !== ''): ?>
                                     <a href="<?php echo s(new moodle_url('/report/idgprogress/index.php', ['id' => $course->id])); ?>"
@@ -315,7 +336,7 @@ $cohortcache = $metrics->cohortcache ?? null;
                             data-bs-toggle="modal" data-bs-target="#idgExportModal"
                             data-toggle="modal" data-target="#idgExportModal"
                             onclick="report_idgprogress_open_export_modal()">
-                        <i class="fa fa-download me-1" aria-hidden="true"></i> <?php echo s(report_idgprogress_str('exportoptions', 'Export Report')); ?>
+                        <i class="fa fa-download mr-2 me-2" aria-hidden="true"></i><span><?php echo s(report_idgprogress_str('exportoptions', 'Export Report')); ?></span>
                     </button>
                 </div>
             <?php endif; ?>
@@ -462,7 +483,7 @@ $sitecustomfields = report_idgprogress_get_custom_profile_fields();
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="format" id="exportFormatExcel" value="excel" checked>
                                     <label class="form-check-label fw-bold text-success" for="exportFormatExcel">
-                                        <i class="fa fa-file-excel-o fa-lg me-1"></i> <?php echo s(report_idgprogress_str('formatexcel', 'Microsoft Excel (.xlsx)')); ?>
+                                        <i class="fa fa-file-excel-o fa-lg mr-2 me-2"></i> <?php echo s(report_idgprogress_str('formatexcel', 'Microsoft Excel (.xlsx)')); ?>
                                     </label>
                                 </div>
                             </div>
@@ -470,9 +491,35 @@ $sitecustomfields = report_idgprogress_get_custom_profile_fields();
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="format" id="exportFormatCsv" value="csv">
                                     <label class="form-check-label fw-bold text-primary" for="exportFormatCsv">
-                                        <i class="fa fa-file-text-o fa-lg me-1"></i> <?php echo s(report_idgprogress_str('formatcsv', 'CSV (.csv)')); ?>
+                                        <i class="fa fa-file-text-o fa-lg mr-2 me-2"></i> <?php echo s(report_idgprogress_str('formatcsv', 'CSV (.csv)')); ?>
                                     </label>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Filter Selection -->
+                    <div class="mb-4">
+                        <label for="exportProgressFilter" class="form-label fw-bold d-block text-uppercase small text-muted">
+                            <?php echo s(report_idgprogress_str('filterbyprogress', 'Filter Students by Progress')); ?>
+                        </label>
+                        <select name="progress_filter" id="exportProgressFilter" class="form-select form-control" onchange="report_idgprogress_on_progress_filter_change(this.value)">
+                            <option value="all" selected><?php echo s(report_idgprogress_str('filter_all', 'All Students (All Progress)')); ?></option>
+                            <option value="inprogress"><?php echo s(report_idgprogress_str('filter_inprogress', 'In Progress Only (1% - 99%)')); ?></option>
+                            <option value="completed"><?php echo s(report_idgprogress_str('filter_completed', 'Completed Only (100%)')); ?></option>
+                            <option value="notstarted"><?php echo s(report_idgprogress_str('filter_notstarted', 'Not Started Only (0%)')); ?></option>
+                            <option value="under100"><?php echo s(report_idgprogress_str('filter_under100', 'Under 100% Progress (< 100%)')); ?></option>
+                            <option value="under50"><?php echo s(report_idgprogress_str('filter_under50', 'Under 50% Progress (< 50%)')); ?></option>
+                            <option value="custom"><?php echo s(report_idgprogress_str('filter_custom', 'Custom Progress Range (%)')); ?></option>
+                        </select>
+                        <div id="idgCustomProgressRange" class="mt-2 row g-2" style="display: none;">
+                            <div class="col-6">
+                                <label class="form-label small text-muted mb-1"><?php echo s(report_idgprogress_str('minprogress', 'Min Progress (%)')); ?></label>
+                                <input type="number" name="progress_min" id="idgProgressMin" class="form-control form-control-sm" min="0" max="100" value="0">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small text-muted mb-1"><?php echo s(report_idgprogress_str('maxprogress', 'Max Progress (%)')); ?></label>
+                                <input type="number" name="progress_max" id="idgProgressMax" class="form-control form-control-sm" min="0" max="100" value="100">
                             </div>
                         </div>
                     </div>
@@ -626,10 +673,10 @@ $sitecustomfields = report_idgprogress_get_custom_profile_fields();
 
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-dismiss="modal" onclick="report_idgprogress_close_export_modal()">
-                        <?php echo s(report_idgprogress_str('cancel', 'Cancel')); ?>
+                        <span><?php echo s(report_idgprogress_str('cancel', 'Cancel')); ?></span>
                     </button>
                     <button type="submit" class="btn btn-success fw-bold px-4" onclick="report_idgprogress_on_export_submit()">
-                        <i class="fa fa-download me-1"></i> <?php echo s(report_idgprogress_str('download', 'Download')); ?>
+                        <i class="fa fa-download mr-2 me-2 text-white"></i><span><?php echo s(report_idgprogress_str('download', 'Download')); ?></span>
                     </button>
                 </div>
             </form>
@@ -784,6 +831,14 @@ function report_idgprogress_toggle_fields(selectAll) {
     });
     report_idgprogress_update_order_badges();
 }
+
+function report_idgprogress_on_progress_filter_change(val) {
+    var rangeDiv = document.getElementById('idgCustomProgressRange');
+    if (rangeDiv) {
+        rangeDiv.style.display = (val === 'custom') ? 'flex' : 'none';
+    }
+}
+
 
 document.addEventListener('DOMContentLoaded', function() {
     report_idgprogress_init_field_order();

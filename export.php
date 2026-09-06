@@ -32,6 +32,9 @@ $groupid         = optional_param('group', 0, PARAM_INT);
 $search          = optional_param('search', '', PARAM_NOTAGS);
 $format          = optional_param('format', 'excel', PARAM_ALPHA);
 $requestedfields = optional_param_array('fields', [], PARAM_ALPHANUMEXT);
+$progressfilter  = optional_param('progress_filter', 'all', PARAM_ALPHA);
+$progressmin     = optional_param('progress_min', 0, PARAM_INT);
+$progressmax     = optional_param('progress_max', 100, PARAM_INT);
 
 if ($format === 'xlsx') {
     $format = 'excel';
@@ -290,6 +293,38 @@ if ($format === 'excel') {
             $user,
             $cohortcache
         );
+
+        // Progress filter.
+        $isincluded = true;
+        switch ($progressfilter) {
+            case 'completed':
+                $isincluded = ($studentdata->status === 'completed' || (float)$studentdata->percentage >= 100.0);
+                break;
+            case 'inprogress':
+                $isincluded = ($studentdata->status === 'inprogress');
+                break;
+            case 'notstarted':
+                $isincluded = ($studentdata->status === 'notstarted' || (float)$studentdata->percentage === 0.0);
+                break;
+            case 'under100':
+                $isincluded = ((float)$studentdata->percentage < 100.0 && $studentdata->status !== 'completed');
+                break;
+            case 'under50':
+                $isincluded = ((float)$studentdata->percentage < 50.0);
+                break;
+            case 'custom':
+                $isincluded = ((float)$studentdata->percentage >= (float)$progressmin && (float)$studentdata->percentage <= (float)$progressmax);
+                break;
+            case 'all':
+            default:
+                $isincluded = true;
+                break;
+        }
+
+        if (!$isincluded) {
+            continue;
+        }
+
         $usercustom = $alluserscustomfields[$user->id] ?? [];
         $colidx = 0;
         foreach ($columns as $col) {
@@ -339,6 +374,38 @@ if ($format === 'excel') {
             $user,
             $cohortcache
         );
+
+        // Progress filter.
+        $isincluded = true;
+        switch ($progressfilter) {
+            case 'completed':
+                $isincluded = ($studentdata->status === 'completed' || (float)$studentdata->percentage >= 100.0);
+                break;
+            case 'inprogress':
+                $isincluded = ($studentdata->status === 'inprogress');
+                break;
+            case 'notstarted':
+                $isincluded = ($studentdata->status === 'notstarted' || (float)$studentdata->percentage === 0.0);
+                break;
+            case 'under100':
+                $isincluded = ((float)$studentdata->percentage < 100.0 && $studentdata->status !== 'completed');
+                break;
+            case 'under50':
+                $isincluded = ((float)$studentdata->percentage < 50.0);
+                break;
+            case 'custom':
+                $isincluded = ((float)$studentdata->percentage >= (float)$progressmin && (float)$studentdata->percentage <= (float)$progressmax);
+                break;
+            case 'all':
+            default:
+                $isincluded = true;
+                break;
+        }
+
+        if (!$isincluded) {
+            continue;
+        }
+
         $usercustom = $alluserscustomfields[$user->id] ?? [];
         $row = [];
         foreach ($columns as $col) {
