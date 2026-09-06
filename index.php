@@ -361,14 +361,14 @@ $sitecustomfields = report_idgprogress_get_custom_profile_fields();
                             <div class="col-sm-6 col-md-4">
                                 <div class="form-check">
                                     <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="fullname" id="f_fullname" checked>
-                                    <label class="form-check-label fw-semibold" for="f_fullname"><?php echo s(report_idgprogress_str('field_fullname', 'Full Name')); ?></label>
+                                    <label class="form-check-label" for="f_fullname"><?php echo s(report_idgprogress_str('field_fullname', 'Full Name')); ?></label>
                                 </div>
                             </div>
                             <div class="col-sm-6 col-md-4">
                                 <div class="form-check">
                                     <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="gender" id="f_gender" checked>
-                                    <label class="form-check-label fw-semibold text-primary" for="f_gender">
-                                        <i class="fa fa-venus-mars me-1"></i><?php echo s(report_idgprogress_str('field_gender', 'Gender')); ?>
+                                    <label class="form-check-label" for="f_gender">
+                                        <?php echo s(report_idgprogress_str('field_gender', 'Gender')); ?>
                                     </label>
                                 </div>
                             </div>
@@ -402,7 +402,7 @@ $sitecustomfields = report_idgprogress_get_custom_profile_fields();
                                 <div class="form-check">
                                     <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="custom_<?php echo s($cf->shortname); ?>" id="f_cf_<?php echo s($cf->shortname); ?>" checked>
                                     <label class="form-check-label" for="f_cf_<?php echo s($cf->shortname); ?>">
-                                        <?php echo s(report_idgprogress_str('customfield_header_prefix', 'Profile: {$a}', $cfname)); ?>
+                                        <?php echo s($cfname); ?>
                                     </label>
                                 </div>
                             </div>

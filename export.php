@@ -156,7 +156,7 @@ foreach ($othercustomfields as $cf) {
     if (in_array($fieldkey, $requestedfields, true) || in_array('all_custom', $requestedfields, true)) {
         $fieldname = strip_tags(format_string($cf->name, true, ['context' => $context]));
         $columns[$fieldkey] = [
-            'header' => get_string('customfield_header_prefix', 'report_idgprogress', $fieldname),
+            'header' => $fieldname,
             'value'  => fn($user, $sdata, $ucustom) => !empty($ucustom[$cf->shortname]) ? (string)$ucustom[$cf->shortname] : '',
         ];
     }

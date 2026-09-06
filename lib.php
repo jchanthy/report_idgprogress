@@ -507,7 +507,7 @@ function report_idgprogress_get_user_gender(stdClass $user, array $usercustomfie
     // 2. Check case-insensitively across custom fields.
     foreach ($usercustomfields as $k => $v) {
         $lk = strtolower($k);
-        if (($lk === 'gender' || $lk === 'sex' || str_contains($lk, 'gender') || str_contains($lk, 'sex')) && !empty($v)) {
+        if (($lk === 'gender' || $lk === 'sex' || str_contains($lk, 'gender') || str_contains($lk, 'sex') || str_contains($k, 'ភេទ')) && !empty($v)) {
             return trim((string)$v);
         }
     }

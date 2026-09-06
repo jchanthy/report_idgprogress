@@ -85,7 +85,7 @@ $string['exportheader_totalactivities'] = 'Total Activities';
 $string['exportheader_progress'] = 'Progress (%)';
 $string['exportheader_coursestatus'] = 'Course Status';
 $string['exportheader_completeddate'] = 'Course Completed Date';
-$string['customfield_header_prefix'] = 'Profile: {$a}';
+$string['customfield_header_prefix'] = '{$a}';
 $string['activity_header_prefix'] = 'Activity: {$a}';
 
 // Export options and dialog.

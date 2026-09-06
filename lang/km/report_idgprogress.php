@@ -85,7 +85,7 @@ $string['exportheader_totalactivities'] = 'សកម្មភាពសរុប'
 $string['exportheader_progress'] = 'វឌ្ឍនភាព (%)';
 $string['exportheader_coursestatus'] = 'ស្ថានភាពវគ្គសិក្សា';
 $string['exportheader_completeddate'] = 'កាលបរិច្ឆេទបញ្ចប់វគ្គសិក្សា';
-$string['customfield_header_prefix'] = 'ព័ត៌មានបន្ថែម: {$a}';
+$string['customfield_header_prefix'] = '{$a}';
 $string['activity_header_prefix'] = 'សកម្មភាព: {$a}';
 
 // Export options and dialog.
