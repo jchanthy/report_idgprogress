@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 /** @var stdClass $plugin */
 $plugin->component = 'report_idgprogress';
-$plugin->version   = 2024100700;
+$plugin->version   = 2024100702;
 $plugin->requires  = 2022112800; // Moodle 4.1 LTS (Build: 20221128) or higher.
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = 'v1.0.0';
+$plugin->release   = 'v1.0.2';

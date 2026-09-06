@@ -526,3 +526,32 @@ function report_idgprogress_get_user_gender(stdClass $user, array $usercustomfie
     return '-';
 }
 
+/**
+ * Safe string retrieval with graceful fallback to prevent debugging() warnings
+ * if Moodle string cache has not yet been refreshed.
+ *
+ * @param string $identifier The key identifier.
+ * @param string $fallback Fallback string if missing in cache.
+ * @param mixed $a Variable argument for get_string.
+ * @return string The resolved localized string.
+ */
+function report_idgprogress_str(string $identifier, string $fallback = '', $a = null): string {
+    $sm = get_string_manager();
+    if ($sm->string_exists($identifier, 'report_idgprogress')) {
+        return get_string($identifier, 'report_idgprogress', $a);
+    }
+    // Check known alternative keys.
+    if ($identifier === 'exportoptions' && $sm->string_exists('exportexcel', 'report_idgprogress')) {
+        return get_string('exportexcel', 'report_idgprogress');
+    }
+    if ($identifier === 'table_gender' && $sm->string_exists('gender', 'moodle')) {
+        return get_string('gender', 'moodle');
+    }
+
+    if ($fallback !== '') {
+        return $a !== null ? str_replace('{$a}', (string)$a, $fallback) : $fallback;
+    }
+    return $identifier;
+}
+
+
