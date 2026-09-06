@@ -273,6 +273,51 @@ $cohortcache = $metrics->cohortcache ?? null;
         width: 100% !important;
     }
 }
+
+/* Participants Table Styling (Moodle Native Table Match) */
+.idg-participants-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+.idg-participants-table thead th {
+    background-color: #f8f9fa !important;
+    border-top: none !important;
+    border-bottom: 2px solid #dee2e6 !important;
+    padding: 0.8rem 0.85rem !important;
+    vertical-align: top !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    color: #1d2125 !important;
+}
+.idg-participants-table thead th .table-sub-dash {
+    color: #6c757d !important;
+    font-weight: normal !important;
+    margin-top: 2px !important;
+}
+.idg-participants-table tbody tr:nth-of-type(odd) {
+    background-color: #fcfdfe !important;
+}
+.idg-participants-table tbody tr:nth-of-type(even) {
+    background-color: #ffffff !important;
+}
+.idg-participants-table tbody tr:hover {
+    background-color: #f0f4f8 !important;
+}
+.idg-participants-table tbody td {
+    padding: 0.85rem 0.85rem !important;
+    vertical-align: middle !important;
+    border-bottom: 1px solid #eaedf1 !important;
+    font-size: 0.875rem !important;
+    color: #212529 !important;
+}
+.idg-participants-table .idg-user-names a {
+    text-decoration: underline !important;
+    line-height: 1.35;
+}
+.idg-participants-table .idg-user-names a:hover {
+    color: #0b5ed7 !important;
+}
 </style>
 
 <!-- Controls: Filter, Search, and Export -->
@@ -453,24 +498,65 @@ if ($totalcount > 0) {
     }
 }
 
+// Batch-fetch course-level groups, roles, and last access.
+$courseusergroups = report_idgprogress_get_course_user_groups($course->id);
+$courseuserroles = report_idgprogress_get_course_user_roles($context->id);
+$courselastaccess = report_idgprogress_get_course_lastaccess($course->id);
+
 if (empty($pagedusers)) {
     echo $OUTPUT->notification(get_string('noparticipantsfound', 'report_idgprogress'), 'info');
 } else {
     // Render Paged Table.
     ?>
     <div class="table-responsive shadow-sm rounded bg-white mb-4">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
+        <table class="table table-striped table-hover align-middle mb-0 idg-participants-table">
+            <thead>
                 <tr>
-                    <th scope="col" style="min-width: 200px;"><?php echo s(get_string('table_fullname', 'report_idgprogress')); ?></th>
-                    <th scope="col" class="text-center" style="min-width: 80px;"><?php echo s(get_string('table_gender', 'report_idgprogress')); ?></th>
-                    <th scope="col"><?php echo s(get_string('table_email', 'report_idgprogress')); ?></th>
-                    <th scope="col"><?php echo s(get_string('table_institution', 'report_idgprogress')); ?></th>
-                    <th scope="col"><?php echo s(get_string('table_department', 'report_idgprogress')); ?></th>
-                    <th scope="col" class="text-center"><?php echo s(get_string('table_activities', 'report_idgprogress')); ?></th>
-                    <th scope="col" style="min-width: 140px;"><?php echo s(get_string('table_progress', 'report_idgprogress')); ?></th>
-                    <th scope="col" class="text-center"><?php echo s(get_string('table_status', 'report_idgprogress')); ?></th>
-                    <th scope="col"><?php echo s(get_string('table_completeddate', 'report_idgprogress')); ?></th>
+                    <th scope="col" style="min-width: 220px;">
+                        <div class="fw-bold text-dark"><?php echo s(get_string('firstname')); ?></div>
+                        <div class="text-muted small">/ <?php echo s(get_string('lastname')); ?> <i class="fa fa-caret-up text-muted ms-1 me-1"></i></div>
+                        <div class="text-muted small table-sub-dash">—</div>
+                    </th>
+                    <th scope="col">
+                        <div class="fw-bold text-dark"><?php echo s(get_string('email')); ?></div>
+                        <div class="text-muted small table-sub-dash">—</div>
+                    </th>
+                    <th scope="col">
+                        <div class="fw-bold text-dark"><?php echo s(get_string('phone')); ?></div>
+                        <div class="text-muted small table-sub-dash">—</div>
+                    </th>
+                    <th scope="col">
+                        <div class="fw-bold text-dark"><?php echo s(get_string('department')); ?></div>
+                        <div class="text-muted small table-sub-dash">—</div>
+                    </th>
+                    <th scope="col">
+                        <div class="fw-bold text-dark"><?php echo s(get_string('roles')); ?></div>
+                        <div class="text-muted small table-sub-dash">—</div>
+                    </th>
+                    <th scope="col">
+                        <div class="fw-bold text-dark"><?php echo s(get_string('groups')); ?></div>
+                        <div class="text-muted small table-sub-dash">—</div>
+                    </th>
+                    <th scope="col" class="text-center">
+                        <div class="fw-bold text-dark"><?php echo s(get_string('table_activities', 'report_idgprogress')); ?></div>
+                        <div class="text-muted small table-sub-dash">—</div>
+                    </th>
+                    <th scope="col" style="min-width: 130px;">
+                        <div class="fw-bold text-dark"><?php echo s(get_string('table_progress', 'report_idgprogress')); ?></div>
+                        <div class="text-muted small table-sub-dash">—</div>
+                    </th>
+                    <th scope="col">
+                        <div class="fw-bold text-dark"><?php echo s(get_string('lastcourseaccess')); ?></div>
+                        <div class="text-muted small table-sub-dash">—</div>
+                    </th>
+                    <th scope="col" class="text-center">
+                        <div class="fw-bold text-dark"><?php echo s(get_string('status')); ?></div>
+                        <div class="text-muted small table-sub-dash">—</div>
+                    </th>
+                    <th scope="col">
+                        <div class="fw-bold text-dark"><?php echo s(get_string('table_completeddate', 'report_idgprogress')); ?></div>
+                        <div class="text-muted small table-sub-dash">—</div>
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -485,12 +571,26 @@ if (empty($pagedusers)) {
                     );
 
                     $userurl = new moodle_url('/user/view.php', ['id' => $user->id, 'course' => $course->id]);
-                    $userpic = $OUTPUT->user_picture($user, ['size' => 35, 'link' => false]);
-                    $fullname = fullname($user);
+                    $userpic = $OUTPUT->user_picture($user, ['size' => 38, 'link' => false]);
                     $usercustom = $pagedcustomfields[$user->id] ?? [];
-                    $gender = report_idgprogress_get_user_gender($user, $usercustom);
-                    $institution = !empty($user->institution) ? $user->institution : '-';
-                    $department = !empty($user->department) ? $user->department : '-';
+
+                    // Phone & Department.
+                    $phone = !empty($user->phone1) ? $user->phone1 : (!empty($user->phone2) ? $user->phone2 : '');
+                    $department = !empty($user->department) ? $user->department : '';
+
+                    // Groups.
+                    $usergroups = $courseusergroups[$user->id] ?? [];
+                    $groupsdisplay = !empty($usergroups) ? implode(', ', $usergroups) : get_string('nogroups', 'group');
+
+                    // Roles.
+                    $userroles = $courseuserroles[$user->id] ?? [];
+                    $rolesdisplay = !empty($userroles) ? implode(', ', $userroles) : get_string('student', 'moodle', 'Student');
+
+                    // Last course access.
+                    $timeaccess = $courselastaccess[$user->id] ?? 0;
+                    $lastaccessstr = $timeaccess > 0 ? format_time(time() - $timeaccess) : get_string('never');
+
+                    // Progress metrics.
                     $activitiesratio = $studentdata->completedactivities . ' / ' . $studentdata->totalactivities;
                     $progressbar = report_idgprogress_render_progress_bar($studentdata->percentage, $studentdata->status);
                     $statusbadge = report_idgprogress_render_status_badge($studentdata->status);
@@ -511,29 +611,49 @@ if (empty($pagedusers)) {
                     ?>
                     <tr>
                         <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <?php echo $userpic; ?>
-                                <div>
-                                    <a href="<?php echo s($userurl); ?>" class="fw-bold text-decoration-none">
-                                        <?php echo s($fullname); ?>
+                            <div class="d-flex align-items-center">
+                                <div class="me-2 mr-2 flex-shrink-0">
+                                    <?php echo $userpic; ?>
+                                </div>
+                                <div class="idg-user-names lh-sm">
+                                    <a href="<?php echo s($userurl); ?>" class="d-block fw-bold text-primary text-decoration-underline" style="font-size: 0.95rem;">
+                                        <?php echo s($user->firstname); ?>
                                     </a>
-                                    <div class="text-muted small">@<?php echo s($user->username); ?></div>
+                                    <?php if (!empty($user->lastname)): ?>
+                                        <a href="<?php echo s($userurl); ?>" class="d-block fw-bold text-dark text-decoration-underline mt-1" style="font-size: 0.95rem;">
+                                            <?php echo s($user->lastname); ?>
+                                        </a>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </td>
-                        <td class="text-center">
-                            <span class="badge bg-light text-dark border px-2 py-1"><?php echo s($gender); ?></span>
+                        <td>
+                            <span class="text-dark"><?php echo s($user->email); ?></span>
                         </td>
                         <td>
-                            <span class="text-muted"><?php echo s($user->email); ?></span>
+                            <?php echo !empty($phone) ? s($phone) : '<span class="text-muted">-</span>'; ?>
                         </td>
-                        <td><?php echo s($institution); ?></td>
-                        <td><?php echo s($department); ?></td>
+                        <td>
+                            <?php echo !empty($department) ? s($department) : '<span class="text-muted">-</span>'; ?>
+                        </td>
+                        <td>
+                            <span class="text-dark"><?php echo s($rolesdisplay); ?></span>
+                        </td>
+                        <td>
+                            <?php if (!empty($usergroups)): ?>
+                                <span class="text-dark"><?php echo s($groupsdisplay); ?></span>
+                            <?php else: ?>
+                                <span class="text-muted"><?php echo s($groupsdisplay); ?></span>
+                            <?php endif; ?>
+                        </td>
                         <td class="text-center fw-semibold">
                             <?php echo s($activitiesratio); ?>
                         </td>
                         <td>
                             <?php echo $progressbar; ?>
+                        </td>
+                        <td>
+                            <span class="text-dark"><?php echo s($lastaccessstr); ?></span>
                         </td>
                         <td class="text-center">
                             <?php echo $statusbadge; ?>

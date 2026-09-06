@@ -161,3 +161,48 @@
     }
 }
 
+/* Participants Table Styling (Moodle Native Table Match) */
+.idg-participants-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+.idg-participants-table thead th {
+    background-color: #f8f9fa !important;
+    border-top: none !important;
+    border-bottom: 2px solid #dee2e6 !important;
+    padding: 0.8rem 0.85rem !important;
+    vertical-align: top !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    color: #1d2125 !important;
+}
+.idg-participants-table thead th .table-sub-dash {
+    color: #6c757d !important;
+    font-weight: normal !important;
+    margin-top: 2px !important;
+}
+.idg-participants-table tbody tr:nth-of-type(odd) {
+    background-color: #fcfdfe !important;
+}
+.idg-participants-table tbody tr:nth-of-type(even) {
+    background-color: #ffffff !important;
+}
+.idg-participants-table tbody tr:hover {
+    background-color: #f0f4f8 !important;
+}
+.idg-participants-table tbody td {
+    padding: 0.85rem 0.85rem !important;
+    vertical-align: middle !important;
+    border-bottom: 1px solid #eaedf1 !important;
+    font-size: 0.875rem !important;
+    color: #212529 !important;
+}
+.idg-participants-table .idg-user-names a {
+    text-decoration: underline !important;
+    line-height: 1.35;
+}
+.idg-participants-table .idg-user-names a:hover {
+    color: #0b5ed7 !important;
+}
+

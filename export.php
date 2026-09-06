@@ -82,6 +82,11 @@ if ($groupid !== -1) {
     }
 }
 
+// Batch-fetch course-level groups, roles, and last access.
+$courseusergroups = report_idgprogress_get_course_user_groups($course->id);
+$courseuserroles = report_idgprogress_get_course_user_roles($context->id);
+$courselastaccess = report_idgprogress_get_course_lastaccess($course->id);
+
 // Retrieve site custom profile fields.
 $customprofilefields = report_idgprogress_get_custom_profile_fields();
 $othercustomfields = [];
@@ -148,6 +153,33 @@ $availablecolumns = [
         'header' => get_string('exportheader_department', 'report_idgprogress'),
         'value'  => function($user, $sdata, $ucustom) {
             return !empty($user->department) ? $user->department : '';
+        },
+    ],
+    'phone' => [
+        'header' => get_string('phone'),
+        'value'  => function($user, $sdata, $ucustom) {
+            return !empty($user->phone1) ? $user->phone1 : (!empty($user->phone2) ? $user->phone2 : '');
+        },
+    ],
+    'roles' => [
+        'header' => get_string('roles'),
+        'value'  => function($user, $sdata, $ucustom) use ($courseuserroles) {
+            $r = $courseuserroles[$user->id] ?? [];
+            return !empty($r) ? implode(', ', $r) : get_string('student', 'moodle', 'Student');
+        },
+    ],
+    'groups' => [
+        'header' => get_string('groups'),
+        'value'  => function($user, $sdata, $ucustom) use ($courseusergroups) {
+            $g = $courseusergroups[$user->id] ?? [];
+            return !empty($g) ? implode(', ', $g) : get_string('nogroups', 'group');
+        },
+    ],
+    'lastaccess' => [
+        'header' => get_string('lastcourseaccess'),
+        'value'  => function($user, $sdata, $ucustom) use ($courselastaccess) {
+            $la = $courselastaccess[$user->id] ?? 0;
+            return $la > 0 ? format_time(time() - $la) : get_string('never');
         },
     ],
     'activities_count' => [

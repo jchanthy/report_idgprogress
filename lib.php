@@ -102,10 +102,14 @@ function report_idgprogress_get_enrolled_users(
     global $DB;
 
     if (class_exists('\core_user\fields')) {
-        $userfieldsapi = \core_user\fields::for_userpic()->including('institution', 'department', 'username', 'email');
+        $userfieldsapi = \core_user\fields::for_userpic()->including(
+            'institution', 'department', 'username', 'email', 'phone1', 'phone2', 'lastaccess'
+        );
         $userfields = $userfieldsapi->get_sql('u', false, '', '', false)->selects;
     } else {
-        $userfields = user_picture::fields('u', ['institution', 'department', 'username', 'email']);
+        $userfields = user_picture::fields('u', [
+            'institution', 'department', 'username', 'email', 'phone1', 'phone2', 'lastaccess'
+        ]);
     }
 
     $search = trim($search);
@@ -547,7 +551,78 @@ function report_idgprogress_render_status_badge(string $status): string {
 
     $label = get_string('status_' . $status, 'report_idgprogress');
 
-    return '<span class="' . $badgetype . ' px-2 py-1" style="font-size: 0.85rem; font-weight: 500;">' . s($label) . '</span>';
+    return '<span class="' . $badgetype . ' rounded-pill px-3 py-1 fw-bold font-weight-bold" style="font-size: 0.8rem; letter-spacing: 0.2px;">' . s($label) . '</span>';
+}
+
+/**
+ * Retrieve all group memberships for users in a course in a single fast query.
+ *
+ * @param int $courseid Course ID.
+ * @return array Associative array of [userid => ['groupname1', 'groupname2', ...]].
+ */
+function report_idgprogress_get_course_user_groups(int $courseid): array {
+    global $DB;
+    $groupsbyuser = [];
+    try {
+        $sql = "SELECT gm.id, gm.userid, g.name AS groupname
+                  FROM {groups_members} gm
+                  JOIN {groups} g ON g.id = gm.groupid
+                 WHERE g.courseid = :courseid
+              ORDER BY g.name ASC";
+        $records = $DB->get_records_sql($sql, ['courseid' => $courseid]);
+        foreach ($records as $rec) {
+            $groupsbyuser[$rec->userid][] = $rec->groupname;
+        }
+    } catch (\Throwable $e) {
+        // Fallback gracefully.
+    }
+    return $groupsbyuser;
+}
+
+/**
+ * Retrieve user course roles in a single batch query.
+ *
+ * @param int $contextid Context ID of the course.
+ * @return array Associative array of [userid => ['Student', ...]].
+ */
+function report_idgprogress_get_course_user_roles(int $contextid): array {
+    global $DB;
+    $rolesbyuser = [];
+    try {
+        $sql = "SELECT ra.id, ra.userid, r.name AS rolename, r.shortname
+                  FROM {role_assignments} ra
+                  JOIN {role} r ON r.id = ra.roleid
+                 WHERE ra.contextid = :contextid
+              ORDER BY r.sortorder ASC, r.id ASC";
+        $records = $DB->get_records_sql($sql, ['contextid' => $contextid]);
+        foreach ($records as $rec) {
+            $name = !empty($rec->rolename) ? $rec->rolename : ucfirst($rec->shortname);
+            $rolesbyuser[$rec->userid][] = $name;
+        }
+    } catch (\Throwable $e) {
+        // Fallback gracefully.
+    }
+    return $rolesbyuser;
+}
+
+/**
+ * Retrieve last course access timestamp for all users in a course.
+ *
+ * @param int $courseid Course ID.
+ * @return array Associative array of [userid => timeaccess].
+ */
+function report_idgprogress_get_course_lastaccess(int $courseid): array {
+    global $DB;
+    try {
+        return $DB->get_records_menu(
+            'user_lastaccess',
+            ['courseid' => $courseid],
+            '',
+            'userid, timeaccess'
+        );
+    } catch (\Throwable $e) {
+        return [];
+    }
 }
 
 /**
