@@ -101,7 +101,12 @@ function report_idgprogress_get_enrolled_users(
 ): array {
     global $DB;
 
-    $userfields = user_picture::fields('u', ['institution', 'department', 'username', 'email']);
+    if (class_exists('\core_user\fields')) {
+        $userfieldsapi = \core_user\fields::for_userpic()->including('institution', 'department', 'username', 'email');
+        $userfields = $userfieldsapi->get_sql('u', false, '', '', false)->selects;
+    } else {
+        $userfields = user_picture::fields('u', ['institution', 'department', 'username', 'email']);
+    }
 
     $search = trim($search);
     if ($search === '') {
