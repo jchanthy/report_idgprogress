@@ -133,46 +133,192 @@ $cohortcache = $metrics->cohortcache ?? null;
     </div>
 </div>
 
+<style>
+/* IDG Progress Toolbar Normalization */
+.idg-toolbar-card {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 0.5rem;
+}
+.idg-toolbar-col {
+    min-width: 0;
+}
+.idg-toolbar-card .groupselector,
+.idg-toolbar-card .groupselector .singleselect,
+.idg-toolbar-card .singleselect,
+.idg-toolbar-card .groupselector form {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    float: none !important;
+}
+.idg-toolbar-card .groupselector label {
+    display: block !important;
+    margin: 0 0 0.35rem 0 !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+    color: #495057 !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+.idg-toolbar-card .groupselector select,
+.idg-toolbar-card .groupselector .custom-select,
+.idg-toolbar-card .groupselector .singleselect select,
+.idg-toolbar-card .groupselector .form-control {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    display: block !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    border-radius: 0.375rem !important;
+    border: 1px solid #ced4da !important;
+    padding: 0.375rem 0.75rem !important;
+    font-size: 0.9rem !important;
+    line-height: 1.5 !important;
+    background-color: #fff !important;
+    vertical-align: middle !important;
+}
+.idg-toolbar-card .idg-search-form {
+    margin: 0 !important;
+    width: 100% !important;
+}
+.idg-toolbar-card .idg-search-form .input-group {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+}
+.idg-toolbar-card .idg-search-form .form-control {
+    height: 38px !important;
+    min-height: 38px !important;
+    font-size: 0.9rem !important;
+    line-height: 1.5 !important;
+    border-radius: 0.375rem 0 0 0.375rem !important;
+    border: 1px solid #ced4da !important;
+    min-width: 0 !important;
+}
+.idg-toolbar-card .idg-search-form .input-group-append {
+    display: flex !important;
+    margin-left: -1px !important;
+}
+.idg-toolbar-card .idg-search-form .input-group-append .btn {
+    height: 38px !important;
+    min-height: 38px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.9rem !important;
+    line-height: 1.5 !important;
+    padding: 0.375rem 0.85rem !important;
+    border: 1px solid #6c757d !important;
+}
+.idg-toolbar-card .idg-search-form .input-group-append .btn:first-child {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+.idg-toolbar-card .idg-search-form .input-group-append .btn:last-child {
+    border-top-right-radius: 0.375rem !important;
+    border-bottom-right-radius: 0.375rem !important;
+}
+.idg-toolbar-card .idg-btn-export {
+    height: 38px !important;
+    min-height: 38px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    padding: 0.375rem 1rem !important;
+    border-radius: 0.375rem !important;
+    vertical-align: middle !important;
+}
+@media (max-width: 767.98px) {
+    .idg-toolbar-card .idg-btn-export {
+        width: 100% !important;
+    }
+}
+</style>
+
 <!-- Controls: Filter, Search, and Export -->
-<div class="card shadow-sm mb-4">
+<div class="card shadow-sm mb-4 idg-toolbar-card">
     <div class="card-body">
-        <div class="row align-items-center g-3">
-            <div class="col-md-5 col-lg-4">
-                <?php
-                if ($groupmode) {
-                    groups_print_course_menu($course, $baseurl);
-                }
-                ?>
-            </div>
-            <div class="col-md-7 col-lg-5">
-                <form method="get" action="<?php echo s(new moodle_url('/report/idgprogress/index.php')); ?>" class="d-flex gap-2">
-                    <input type="hidden" name="id" value="<?php echo (int)$course->id; ?>" />
-                    <?php if ($groupid): ?>
-                        <input type="hidden" name="group" value="<?php echo (int)$groupid; ?>" />
-                    <?php endif; ?>
-                    <input type="text" name="search" class="form-control"
-                           placeholder="<?php echo s(get_string('searchparticipant', 'report_idgprogress')); ?>"
-                           value="<?php echo s($search); ?>" />
-                    <button type="submit" class="btn btn-secondary text-nowrap">
-                        <i class="fa fa-search" aria-hidden="true"></i> <?php echo s(get_string('search', 'report_idgprogress')); ?>
+        <div class="row align-items-end g-3">
+            <?php if ($groupmode): ?>
+                <div class="col-12 col-md-4 col-lg-4 idg-toolbar-col mb-2 mb-md-0">
+                    <div class="idg-group-selector-wrapper">
+                        <?php groups_print_course_menu($course, $baseurl); ?>
+                    </div>
+                </div>
+                <div class="col-12 col-md-5 col-lg-5 idg-toolbar-col mb-2 mb-md-0">
+                    <form method="get" action="<?php echo s(new moodle_url('/report/idgprogress/index.php')); ?>" class="idg-search-form">
+                        <input type="hidden" name="id" value="<?php echo (int)$course->id; ?>" />
+                        <?php if ($groupid): ?>
+                            <input type="hidden" name="group" value="<?php echo (int)$groupid; ?>" />
+                        <?php endif; ?>
+                        <div class="input-group">
+                            <input type="text" name="search" class="form-control"
+                                   placeholder="<?php echo s(get_string('searchparticipant', 'report_idgprogress')); ?>"
+                                   value="<?php echo s($search); ?>" />
+                            <div class="input-group-append">
+                                <button type="submit" class="btn btn-secondary text-nowrap">
+                                    <i class="fa fa-search" aria-hidden="true"></i> <?php echo s(get_string('search', 'report_idgprogress')); ?>
+                                </button>
+                                <?php if ($search !== ''): ?>
+                                    <a href="<?php echo s(new moodle_url('/report/idgprogress/index.php', ['id' => $course->id, 'group' => $groupid])); ?>"
+                                       class="btn btn-outline-secondary text-nowrap">
+                                        <?php echo s(get_string('clear', 'report_idgprogress')); ?>
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-12 col-md-3 col-lg-3 idg-toolbar-col text-md-end">
+                    <button type="button" class="btn btn-success text-nowrap shadow-sm idg-btn-export"
+                            id="btnIdgOpenExport"
+                            data-bs-toggle="modal" data-bs-target="#idgExportModal"
+                            data-toggle="modal" data-target="#idgExportModal"
+                            onclick="report_idgprogress_open_export_modal()">
+                        <i class="fa fa-download me-1" aria-hidden="true"></i> <?php echo s(report_idgprogress_str('exportoptions', 'Export Report')); ?>
                     </button>
-                    <?php if ($search !== ''): ?>
-                        <a href="<?php echo s(new moodle_url('/report/idgprogress/index.php', ['id' => $course->id, 'group' => $groupid])); ?>"
-                           class="btn btn-outline-secondary text-nowrap">
-                            <?php echo s(get_string('clear', 'report_idgprogress')); ?>
-                        </a>
-                    <?php endif; ?>
-                </form>
-            </div>
-            <div class="col-12 col-lg-3 text-lg-end">
-                <button type="button" class="btn btn-success text-nowrap shadow-sm"
-                        id="btnIdgOpenExport"
-                        data-bs-toggle="modal" data-bs-target="#idgExportModal"
-                        data-toggle="modal" data-target="#idgExportModal"
-                        onclick="report_idgprogress_open_export_modal()">
-                    <i class="fa fa-download me-1" aria-hidden="true"></i> <?php echo s(report_idgprogress_str('exportoptions', 'Export Report')); ?>
-                </button>
-            </div>
+                </div>
+            <?php else: ?>
+                <div class="col-12 col-md-8 col-lg-9 idg-toolbar-col mb-2 mb-md-0">
+                    <form method="get" action="<?php echo s(new moodle_url('/report/idgprogress/index.php')); ?>" class="idg-search-form">
+                        <input type="hidden" name="id" value="<?php echo (int)$course->id; ?>" />
+                        <div class="input-group">
+                            <input type="text" name="search" class="form-control"
+                                   placeholder="<?php echo s(get_string('searchparticipant', 'report_idgprogress')); ?>"
+                                   value="<?php echo s($search); ?>" />
+                            <div class="input-group-append">
+                                <button type="submit" class="btn btn-secondary text-nowrap">
+                                    <i class="fa fa-search" aria-hidden="true"></i> <?php echo s(get_string('search', 'report_idgprogress')); ?>
+                                </button>
+                                <?php if ($search !== ''): ?>
+                                    <a href="<?php echo s(new moodle_url('/report/idgprogress/index.php', ['id' => $course->id])); ?>"
+                                       class="btn btn-outline-secondary text-nowrap">
+                                        <?php echo s(get_string('clear', 'report_idgprogress')); ?>
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-12 col-md-4 col-lg-3 idg-toolbar-col text-md-end">
+                    <button type="button" class="btn btn-success text-nowrap shadow-sm idg-btn-export"
+                            id="btnIdgOpenExport"
+                            data-bs-toggle="modal" data-bs-target="#idgExportModal"
+                            data-toggle="modal" data-target="#idgExportModal"
+                            onclick="report_idgprogress_open_export_modal()">
+                        <i class="fa fa-download me-1" aria-hidden="true"></i> <?php echo s(report_idgprogress_str('exportoptions', 'Export Report')); ?>
+                    </button>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>

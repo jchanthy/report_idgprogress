@@ -1,0 +1,141 @@
+/**
+ * Styles for IDG Progress Report plugin (report_idgprogress).
+ *
+ * @package   report_idgprogress
+ * @copyright 2024 Cambodia Academy of Digital Technology (CADT)
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+/* Toolbar Card & Container */
+.idg-toolbar-card {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 0.5rem;
+}
+
+.idg-toolbar-card .card-body {
+    padding: 1rem 1.25rem;
+}
+
+.idg-toolbar-col {
+    min-width: 0; /* Critical: prevents flex items from overflowing when content is wide */
+}
+
+/* Group Selector Normalization */
+.idg-toolbar-card .idg-group-selector-wrapper {
+    width: 100%;
+}
+
+.idg-toolbar-card .groupselector,
+.idg-toolbar-card .groupselector .singleselect,
+.idg-toolbar-card .singleselect,
+.idg-toolbar-card .groupselector form {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    float: none !important;
+}
+
+.idg-toolbar-card .groupselector label {
+    display: block !important;
+    margin: 0 0 0.35rem 0 !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+    color: #495057 !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.idg-toolbar-card .groupselector select,
+.idg-toolbar-card .groupselector .custom-select,
+.idg-toolbar-card .groupselector .singleselect select,
+.idg-toolbar-card .groupselector .form-control {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    display: block !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    border-radius: 0.375rem !important;
+    border: 1px solid #ced4da !important;
+    padding: 0.375rem 0.75rem !important;
+    font-size: 0.9rem !important;
+    line-height: 1.5 !important;
+    background-color: #fff !important;
+    vertical-align: middle !important;
+}
+
+/* Search Form & Input Group */
+.idg-toolbar-card .idg-search-form {
+    margin: 0 !important;
+    width: 100% !important;
+}
+
+.idg-toolbar-card .idg-search-form .input-group {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+}
+
+.idg-toolbar-card .idg-search-form .form-control {
+    height: 38px !important;
+    min-height: 38px !important;
+    font-size: 0.9rem !important;
+    line-height: 1.5 !important;
+    border-radius: 0.375rem 0 0 0.375rem !important;
+    border: 1px solid #ced4da !important;
+    min-width: 0 !important;
+}
+
+.idg-toolbar-card .idg-search-form .input-group-append {
+    display: flex !important;
+    margin-left: -1px !important;
+}
+
+.idg-toolbar-card .idg-search-form .input-group-append .btn {
+    height: 38px !important;
+    min-height: 38px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.9rem !important;
+    line-height: 1.5 !important;
+    padding: 0.375rem 0.85rem !important;
+    border: 1px solid #6c757d !important;
+}
+
+.idg-toolbar-card .idg-search-form .input-group-append .btn:first-child {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+
+.idg-toolbar-card .idg-search-form .input-group-append .btn:last-child {
+    border-top-right-radius: 0.375rem !important;
+    border-bottom-right-radius: 0.375rem !important;
+}
+
+/* Export Button */
+.idg-toolbar-card .idg-btn-export {
+    height: 38px !important;
+    min-height: 38px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    padding: 0.375rem 1rem !important;
+    border-radius: 0.375rem !important;
+    vertical-align: middle !important;
+}
+
+/* Responsive Mobile Layout */
+@media (max-width: 767.98px) {
+    .idg-toolbar-card .idg-btn-export {
+        width: 100% !important;
+    }
+}
