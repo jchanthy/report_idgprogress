@@ -232,26 +232,130 @@ function report_idgprogress_count_enrolled_users(
 /**
  * Calculate completion status and metrics for an individual student.
  *
+/**
+ * Bulk pre-fetch all activity and course completion records for an entire cohort.
+ * Replaces thousands of individual database queries with just 2 batched queries.
+ *
+ * @param int $courseid Course ID.
+ * @param array $activityids Array of course module IDs (tracked activities).
+ * @param array $userids Array of user IDs.
+ * @return stdClass Object containing ->modules[userid][cmid] and ->course[userid].
+ */
+function report_idgprogress_load_cohort_completion_cache(int $courseid, array $activityids, array $userids): stdClass {
+    global $DB;
+
+    $cache = (object)[
+        'modules' => [],
+        'course'  => [],
+    ];
+
+    if (empty($userids)) {
+        return $cache;
+    }
+
+    $cleanuserids = array_values(array_unique(array_filter(array_map('intval', $userids))));
+    if (empty($cleanuserids)) {
+        return $cache;
+    }
+
+    $cleanactids = array_values(array_unique(array_filter(array_map('intval', $activityids))));
+
+    // Chunk user IDs in batches of 500 to stay well within SQL parameter limits.
+    $userchunks = array_chunk($cleanuserids, 500);
+
+    foreach ($userchunks as $chunk) {
+        [$usql, $uparams] = $DB->get_in_or_equal($chunk, SQL_PARAMS_NAMED, 'u');
+
+        // 1. Bulk load course-level completions.
+        $csql = "SELECT id, userid, timecompleted
+                   FROM {course_completions}
+                  WHERE course = :courseid AND userid {$usql}";
+        $cparams = array_merge(['courseid' => $courseid], $uparams);
+
+        try {
+            $coursecompletions = $DB->get_records_sql($csql, $cparams);
+            foreach ($coursecompletions as $cc) {
+                $cache->course[$cc->userid] = (object)[
+                    'iscomplete'    => !empty($cc->timecompleted),
+                    'timecompleted' => (int)$cc->timecompleted,
+                ];
+            }
+        } catch (\Throwable $e) {
+            // Ignore failure, fallback gracefully.
+        }
+
+        // 2. Bulk load activity completion states.
+        if (!empty($cleanactids)) {
+            $actchunks = array_chunk($cleanactids, 500);
+            foreach ($actchunks as $actchunk) {
+                [$asql, $aparams] = $DB->get_in_or_equal($actchunk, SQL_PARAMS_NAMED, 'a');
+
+                $msql = "SELECT id, coursemoduleid, userid, completionstate, timemodified
+                           FROM {course_modules_completion}
+                          WHERE coursemoduleid {$asql} AND userid {$usql}";
+                $mparams = array_merge($aparams, $uparams);
+
+                try {
+                    $modcompletions = $DB->get_records_sql($msql, $mparams);
+                    foreach ($modcompletions as $mc) {
+                        if (!isset($cache->modules[$mc->userid])) {
+                            $cache->modules[$mc->userid] = [];
+                        }
+                        $cache->modules[$mc->userid][$mc->coursemoduleid] = (object)[
+                            'completionstate' => (int)$mc->completionstate,
+                            'timemodified'    => (int)$mc->timemodified,
+                        ];
+                    }
+                } catch (\Throwable $e) {
+                    // Ignore failure, fallback gracefully.
+                }
+            }
+        }
+    }
+
+    return $cache;
+}
+
+/**
+ * Calculate individual student completion data, percentage, and activity breakdown.
+ *
  * @param stdClass $course Course object.
  * @param completion_info $completion Completion info instance.
  * @param array $activities Array of tracked course activities.
  * @param stdClass $user User object.
+ * @param stdClass|null $cohortcache Pre-fetched cohort completion cache for high performance.
  * @return stdClass Progress data object.
  */
 function report_idgprogress_get_student_completion_data(
     stdClass $course,
     completion_info $completion,
     array $activities,
-    stdClass $user
+    stdClass $user,
+    ?stdClass $cohortcache = null
 ): stdClass {
     $totalactivities = count($activities);
     $completedactivities = 0;
     $activitystates = [];
 
     foreach ($activities as $cmid => $activity) {
-        $cdata = $completion->get_data($activity, false, $user->id);
+        $cmid = (int)$activity->id;
+
+        if ($cohortcache !== null) {
+            if (isset($cohortcache->modules[$user->id][$cmid])) {
+                $cstate = $cohortcache->modules[$user->id][$cmid]->completionstate;
+                $ctimemodified = $cohortcache->modules[$user->id][$cmid]->timemodified;
+            } else {
+                $cstate = COMPLETION_INCOMPLETE;
+                $ctimemodified = 0;
+            }
+        } else {
+            $cdata = $completion->get_data($activity, false, $user->id);
+            $cstate = (int)$cdata->completionstate;
+            $ctimemodified = $cdata->timemodified ?? 0;
+        }
+
         $iscompleted = in_array(
-            (int)$cdata->completionstate,
+            $cstate,
             [COMPLETION_COMPLETE, COMPLETION_COMPLETE_PASS],
             true
         );
@@ -263,9 +367,9 @@ function report_idgprogress_get_student_completion_data(
         $activitystates[$cmid] = (object)[
             'cmid'         => $cmid,
             'name'         => $activity->name,
-            'state'        => (int)$cdata->completionstate,
+            'state'        => $cstate,
             'iscompleted'  => $iscompleted,
-            'timemodified' => $cdata->timemodified ?? 0,
+            'timemodified' => $ctimemodified,
         ];
     }
 
@@ -273,11 +377,18 @@ function report_idgprogress_get_student_completion_data(
     $iscoursecomplete = false;
     $timecompleted = 0;
 
-    if ($completion->is_enabled()) {
-        $iscoursecomplete = $completion->is_course_complete($user->id);
-        if ($iscoursecomplete) {
-            $ccompletion = new completion_completion(['userid' => $user->id, 'course' => $course->id]);
-            $timecompleted = !empty($ccompletion->timecompleted) ? (int)$ccompletion->timecompleted : 0;
+    if ($cohortcache !== null) {
+        if (isset($cohortcache->course[$user->id])) {
+            $iscoursecomplete = $cohortcache->course[$user->id]->iscomplete;
+            $timecompleted = $cohortcache->course[$user->id]->timecompleted;
+        }
+    } else {
+        if ($completion->is_enabled()) {
+            $iscoursecomplete = $completion->is_course_complete($user->id);
+            if ($iscoursecomplete) {
+                $ccompletion = new completion_completion(['userid' => $user->id, 'course' => $course->id]);
+                $timecompleted = !empty($ccompletion->timecompleted) ? (int)$ccompletion->timecompleted : 0;
+            }
         }
     }
 
@@ -318,13 +429,15 @@ function report_idgprogress_get_student_completion_data(
  * @param completion_info $completion Completion info instance.
  * @param array $activities Tracked activities.
  * @param array $allusers All enrolled users in scope.
- * @return stdClass Summary metrics.
+ * @param stdClass|null $cohortcache Optional pre-fetched completion cache.
+ * @return stdClass Summary metrics including ->cohortcache.
  */
 function report_idgprogress_calculate_summary_metrics(
     stdClass $course,
     completion_info $completion,
     array $activities,
-    array $allusers
+    array $allusers,
+    ?stdClass $cohortcache = null
 ): stdClass {
     $total = count($allusers);
     $completedcount = 0;
@@ -332,8 +445,16 @@ function report_idgprogress_calculate_summary_metrics(
     $notstartedcount = 0;
     $sumpercentage = 0.0;
 
+    if ($cohortcache === null && !empty($allusers) && !empty($activities)) {
+        $cohortcache = report_idgprogress_load_cohort_completion_cache(
+            (int)$course->id,
+            array_keys($activities),
+            array_keys($allusers)
+        );
+    }
+
     foreach ($allusers as $user) {
-        $data = report_idgprogress_get_student_completion_data($course, $completion, $activities, $user);
+        $data = report_idgprogress_get_student_completion_data($course, $completion, $activities, $user, $cohortcache);
         $sumpercentage += $data->percentage;
 
         if ($data->status === 'completed') {
@@ -353,6 +474,7 @@ function report_idgprogress_calculate_summary_metrics(
         'inprogress'      => $inprogresscount,
         'notstarted'      => $notstartedcount,
         'avgprogress'     => $avgprogress,
+        'cohortcache'     => $cohortcache,
     ];
 }
 

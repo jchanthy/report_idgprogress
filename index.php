@@ -94,6 +94,7 @@ if ($groupid !== -1) {
     $allcohortusers = report_idgprogress_get_enrolled_users($context, $groupid, $search, 'u.lastname ASC, u.firstname ASC', 0, 0);
 }
 $metrics = report_idgprogress_calculate_summary_metrics($course, $completion, $trackedactivities, $allcohortusers);
+$cohortcache = $metrics->cohortcache ?? null;
 
 // Render Metrics Dashboard Cards.
 ?>
@@ -222,7 +223,8 @@ if (empty($pagedusers)) {
                         $course,
                         $completion,
                         $trackedactivities,
-                        $user
+                        $user,
+                        $cohortcache
                     );
 
                     $userurl = new moodle_url('/user/view.php', ['id' => $user->id, 'course' => $course->id]);

@@ -242,6 +242,13 @@ if (in_array('activities_detail', $requestedfields, true)) {
     }
 }
 
+// Bulk pre-load completion cache for all export users to prevent N+1 queries.
+$cohortcache = report_idgprogress_load_cohort_completion_cache(
+    (int)$course->id,
+    array_keys($trackedactivities),
+    array_keys($users)
+);
+
 // Release session lock before long file streaming.
 \core\session\manager::write_close();
 
@@ -279,7 +286,8 @@ if ($format === 'excel') {
             $course,
             $completion,
             $trackedactivities,
-            $user
+            $user,
+            $cohortcache
         );
         $usercustom = $alluserscustomfields[$user->id] ?? [];
         $colidx = 0;
@@ -327,7 +335,8 @@ if ($format === 'excel') {
             $course,
             $completion,
             $trackedactivities,
-            $user
+            $user,
+            $cohortcache
         );
         $usercustom = $alluserscustomfields[$user->id] ?? [];
         $row = [];
