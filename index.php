@@ -289,7 +289,7 @@ $sitecustomfields = report_idgprogress_get_custom_profile_fields();
 <div class="modal fade" id="idgExportModal" tabindex="-1" aria-labelledby="idgExportModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
-            <form method="get" action="<?php echo s(new moodle_url('/report/idgprogress/export.php')); ?>" onsubmit="report_idgprogress_on_export_submit()">
+            <form id="idgExportForm" method="get" action="<?php echo s(new moodle_url('/report/idgprogress/export.php')); ?>" onsubmit="report_idgprogress_on_export_submit()">
                 <input type="hidden" name="id" value="<?php echo (int)$course->id; ?>" />
                 <?php if ($groupid): ?>
                     <input type="hidden" name="group" value="<?php echo (int)$groupid; ?>" />
@@ -350,46 +350,65 @@ $sitecustomfields = report_idgprogress_get_custom_profile_fields();
                         <div class="row g-2">
                             <div class="col-sm-6 col-md-4">
                                 <div class="form-check">
-                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="userid" id="f_userid">
-                                    <label class="form-check-label" for="f_userid"><?php echo s(report_idgprogress_str('field_userid', 'User ID')); ?></label>
-                                </div>
-                            </div>
-                            <div class="col-sm-6 col-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="username" id="f_username" checked>
-                                    <label class="form-check-label" for="f_username"><?php echo s(report_idgprogress_str('field_username', 'Username')); ?></label>
-                                </div>
-                            </div>
-                            <div class="col-sm-6 col-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="fullname" id="f_fullname" checked>
-                                    <label class="form-check-label" for="f_fullname"><?php echo s(report_idgprogress_str('field_fullname', 'Full Name')); ?></label>
-                                </div>
-                            </div>
-                            <div class="col-sm-6 col-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="gender" id="f_gender" checked>
-                                    <label class="form-check-label" for="f_gender">
-                                        <?php echo s(report_idgprogress_str('field_gender', 'Gender')); ?>
+                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="userid" id="f_userid" onchange="report_idgprogress_on_field_toggle(this)">
+                                    <label class="form-check-label" for="f_userid">
+                                        <?php echo s(report_idgprogress_str('field_userid', 'User ID')); ?>
+                                        <span class="badge bg-primary text-white rounded-pill ms-1 idg-order-badge" style="display: none; font-size: 0.72rem; padding: 0.2em 0.5em;"></span>
                                     </label>
                                 </div>
                             </div>
                             <div class="col-sm-6 col-md-4">
                                 <div class="form-check">
-                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="email" id="f_email" checked>
-                                    <label class="form-check-label" for="f_email"><?php echo s(report_idgprogress_str('field_email', 'Email')); ?></label>
+                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="username" id="f_username" onchange="report_idgprogress_on_field_toggle(this)" checked>
+                                    <label class="form-check-label" for="f_username">
+                                        <?php echo s(report_idgprogress_str('field_username', 'Username')); ?>
+                                        <span class="badge bg-primary text-white rounded-pill ms-1 idg-order-badge" style="display: none; font-size: 0.72rem; padding: 0.2em 0.5em;"></span>
+                                    </label>
                                 </div>
                             </div>
                             <div class="col-sm-6 col-md-4">
                                 <div class="form-check">
-                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="institution" id="f_institution" checked>
-                                    <label class="form-check-label" for="f_institution"><?php echo s(report_idgprogress_str('field_institution', 'Institution / Ministry')); ?></label>
+                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="fullname" id="f_fullname" onchange="report_idgprogress_on_field_toggle(this)" checked>
+                                    <label class="form-check-label" for="f_fullname">
+                                        <?php echo s(report_idgprogress_str('field_fullname', 'Full Name')); ?>
+                                        <span class="badge bg-primary text-white rounded-pill ms-1 idg-order-badge" style="display: none; font-size: 0.72rem; padding: 0.2em 0.5em;"></span>
+                                    </label>
                                 </div>
                             </div>
                             <div class="col-sm-6 col-md-4">
                                 <div class="form-check">
-                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="department" id="f_department" checked>
-                                    <label class="form-check-label" for="f_department"><?php echo s(report_idgprogress_str('field_department', 'Department / Unit')); ?></label>
+                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="gender" id="f_gender" onchange="report_idgprogress_on_field_toggle(this)" checked>
+                                    <label class="form-check-label" for="f_gender">
+                                        <?php echo s(report_idgprogress_str('field_gender', 'Gender')); ?>
+                                        <span class="badge bg-primary text-white rounded-pill ms-1 idg-order-badge" style="display: none; font-size: 0.72rem; padding: 0.2em 0.5em;"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="email" id="f_email" onchange="report_idgprogress_on_field_toggle(this)" checked>
+                                    <label class="form-check-label" for="f_email">
+                                        <?php echo s(report_idgprogress_str('field_email', 'Email')); ?>
+                                        <span class="badge bg-primary text-white rounded-pill ms-1 idg-order-badge" style="display: none; font-size: 0.72rem; padding: 0.2em 0.5em;"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="institution" id="f_institution" onchange="report_idgprogress_on_field_toggle(this)" checked>
+                                    <label class="form-check-label" for="f_institution">
+                                        <?php echo s(report_idgprogress_str('field_institution', 'Institution / Ministry')); ?>
+                                        <span class="badge bg-primary text-white rounded-pill ms-1 idg-order-badge" style="display: none; font-size: 0.72rem; padding: 0.2em 0.5em;"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="department" id="f_department" onchange="report_idgprogress_on_field_toggle(this)" checked>
+                                    <label class="form-check-label" for="f_department">
+                                        <?php echo s(report_idgprogress_str('field_department', 'Department / Unit')); ?>
+                                        <span class="badge bg-primary text-white rounded-pill ms-1 idg-order-badge" style="display: none; font-size: 0.72rem; padding: 0.2em 0.5em;"></span>
+                                    </label>
                                 </div>
                             </div>
                             <?php
@@ -402,41 +421,57 @@ $sitecustomfields = report_idgprogress_get_custom_profile_fields();
                             ?>
                             <div class="col-sm-6 col-md-4">
                                 <div class="form-check">
-                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="custom_<?php echo s($cf->shortname); ?>" id="f_cf_<?php echo s($cf->shortname); ?>" checked>
+                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="custom_<?php echo s($cf->shortname); ?>" id="f_cf_<?php echo s($cf->shortname); ?>" onchange="report_idgprogress_on_field_toggle(this)" checked>
                                     <label class="form-check-label" for="f_cf_<?php echo s($cf->shortname); ?>">
                                         <?php echo s($cfname); ?>
+                                        <span class="badge bg-primary text-white rounded-pill ms-1 idg-order-badge" style="display: none; font-size: 0.72rem; padding: 0.2em 0.5em;"></span>
                                     </label>
                                 </div>
                             </div>
                             <?php endforeach; ?>
                             <div class="col-sm-6 col-md-4">
                                 <div class="form-check">
-                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="activities_count" id="f_activities_count" checked>
-                                    <label class="form-check-label" for="f_activities_count"><?php echo s(report_idgprogress_str('field_activities_count', 'Completed Activities Count')); ?></label>
+                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="activities_count" id="f_activities_count" onchange="report_idgprogress_on_field_toggle(this)" checked>
+                                    <label class="form-check-label" for="f_activities_count">
+                                        <?php echo s(report_idgprogress_str('field_activities_count', 'Completed Activities Count')); ?>
+                                        <span class="badge bg-primary text-white rounded-pill ms-1 idg-order-badge" style="display: none; font-size: 0.72rem; padding: 0.2em 0.5em;"></span>
+                                    </label>
                                 </div>
                             </div>
                             <div class="col-sm-6 col-md-4">
                                 <div class="form-check">
-                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="progress" id="f_progress" checked>
-                                    <label class="form-check-label" for="f_progress"><?php echo s(report_idgprogress_str('field_progress', 'Progress Percentage (%)')); ?></label>
+                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="progress" id="f_progress" onchange="report_idgprogress_on_field_toggle(this)" checked>
+                                    <label class="form-check-label" for="f_progress">
+                                        <?php echo s(report_idgprogress_str('field_progress', 'Progress Percentage (%)')); ?>
+                                        <span class="badge bg-primary text-white rounded-pill ms-1 idg-order-badge" style="display: none; font-size: 0.72rem; padding: 0.2em 0.5em;"></span>
+                                    </label>
                                 </div>
                             </div>
                             <div class="col-sm-6 col-md-4">
                                 <div class="form-check">
-                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="coursestatus" id="f_coursestatus" checked>
-                                    <label class="form-check-label" for="f_coursestatus"><?php echo s(report_idgprogress_str('field_coursestatus', 'Course Completion Status')); ?></label>
+                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="coursestatus" id="f_coursestatus" onchange="report_idgprogress_on_field_toggle(this)" checked>
+                                    <label class="form-check-label" for="f_coursestatus">
+                                        <?php echo s(report_idgprogress_str('field_coursestatus', 'Course Completion Status')); ?>
+                                        <span class="badge bg-primary text-white rounded-pill ms-1 idg-order-badge" style="display: none; font-size: 0.72rem; padding: 0.2em 0.5em;"></span>
+                                    </label>
                                 </div>
                             </div>
                             <div class="col-sm-6 col-md-4">
                                 <div class="form-check">
-                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="completeddate" id="f_completeddate" checked>
-                                    <label class="form-check-label" for="f_completeddate"><?php echo s(report_idgprogress_str('field_completeddate', 'Course Completed Date')); ?></label>
+                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="completeddate" id="f_completeddate" onchange="report_idgprogress_on_field_toggle(this)" checked>
+                                    <label class="form-check-label" for="f_completeddate">
+                                        <?php echo s(report_idgprogress_str('field_completeddate', 'Course Completed Date')); ?>
+                                        <span class="badge bg-primary text-white rounded-pill ms-1 idg-order-badge" style="display: none; font-size: 0.72rem; padding: 0.2em 0.5em;"></span>
+                                    </label>
                                 </div>
                             </div>
                             <div class="col-sm-6 col-md-4">
                                 <div class="form-check">
-                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="activities_detail" id="f_activities_detail" checked>
-                                    <label class="form-check-label" for="f_activities_detail"><?php echo s(report_idgprogress_str('field_activities_detail', 'Individual Tracked Activities')); ?></label>
+                                    <input class="form-check-input export-field-cb" type="checkbox" name="fields[]" value="activities_detail" id="f_activities_detail" onchange="report_idgprogress_on_field_toggle(this)" checked>
+                                    <label class="form-check-label" for="f_activities_detail">
+                                        <?php echo s(report_idgprogress_str('field_activities_detail', 'Individual Tracked Activities')); ?>
+                                        <span class="badge bg-primary text-white rounded-pill ms-1 idg-order-badge" style="display: none; font-size: 0.72rem; padding: 0.2em 0.5em;"></span>
+                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -457,11 +492,65 @@ $sitecustomfields = report_idgprogress_get_custom_profile_fields();
 </div>
 
 <script>
+var reportIdgSelectedFieldsOrder = [];
+
+function report_idgprogress_init_field_order() {
+    reportIdgSelectedFieldsOrder = [];
+    document.querySelectorAll('.export-field-cb').forEach(function(cb) {
+        if (cb.checked) {
+            reportIdgSelectedFieldsOrder.push(cb.value);
+        }
+    });
+    report_idgprogress_update_order_badges();
+}
+
+function report_idgprogress_on_field_toggle(cb) {
+    var val = cb.value;
+    var idx = reportIdgSelectedFieldsOrder.indexOf(val);
+    if (cb.checked) {
+        if (idx === -1) {
+            reportIdgSelectedFieldsOrder.push(val);
+        }
+    } else {
+        if (idx !== -1) {
+            reportIdgSelectedFieldsOrder.splice(idx, 1);
+        }
+    }
+    report_idgprogress_update_order_badges();
+}
+
+function report_idgprogress_update_order_badges() {
+    var orderMap = {};
+    reportIdgSelectedFieldsOrder.forEach(function(val, i) {
+        orderMap[val] = i + 1;
+    });
+
+    document.querySelectorAll('.export-field-cb').forEach(function(cb) {
+        var parent = cb.closest('.form-check');
+        if (!parent) {
+            return;
+        }
+        var badge = parent.querySelector('.idg-order-badge');
+        if (!badge) {
+            return;
+        }
+
+        if (cb.checked && orderMap[cb.value] !== undefined) {
+            badge.textContent = orderMap[cb.value];
+            badge.style.display = 'inline-block';
+        } else {
+            badge.textContent = '';
+            badge.style.display = 'none';
+        }
+    });
+}
+
 function report_idgprogress_open_export_modal() {
     var modalEl = document.getElementById('idgExportModal');
     if (!modalEl) {
         return;
     }
+    report_idgprogress_init_field_order();
     if (window.bootstrap && window.bootstrap.Modal) {
         var modal = window.bootstrap.Modal.getOrCreateInstance(modalEl);
         modal.show();
@@ -506,6 +595,33 @@ function report_idgprogress_close_export_modal() {
 }
 
 function report_idgprogress_on_export_submit() {
+    var form = document.getElementById('idgExportForm');
+    if (form) {
+        var cbs = form.querySelectorAll('.export-field-cb');
+        cbs.forEach(function(cb) {
+            cb.removeAttribute('name');
+        });
+
+        form.querySelectorAll('.idg-ordered-field-input').forEach(function(el) {
+            el.remove();
+        });
+
+        reportIdgSelectedFieldsOrder.forEach(function(val) {
+            var hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'fields[]';
+            hidden.value = val;
+            hidden.className = 'idg-ordered-field-input';
+            form.appendChild(hidden);
+        });
+
+        setTimeout(function() {
+            cbs.forEach(function(cb) {
+                cb.setAttribute('name', 'fields[]');
+            });
+        }, 150);
+    }
+
     setTimeout(function() {
         report_idgprogress_close_export_modal();
     }, 350);
@@ -513,10 +629,19 @@ function report_idgprogress_on_export_submit() {
 }
 
 function report_idgprogress_toggle_fields(selectAll) {
+    reportIdgSelectedFieldsOrder = [];
     document.querySelectorAll('.export-field-cb').forEach(function(cb) {
         cb.checked = selectAll;
+        if (selectAll) {
+            reportIdgSelectedFieldsOrder.push(cb.value);
+        }
     });
+    report_idgprogress_update_order_badges();
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    report_idgprogress_init_field_order();
+});
 </script>
 <?php
 echo $OUTPUT->footer();

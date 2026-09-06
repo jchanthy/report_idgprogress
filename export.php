@@ -102,128 +102,109 @@ if (empty($requestedfields)) {
     }
 }
 
-// Construct export columns definition.
-$columns = [];
-
-if (in_array('userid', $requestedfields, true)) {
-    $columns['userid'] = [
+// Define all available field definitions indexed by field identifier.
+$availablecolumns = [
+    'userid' => [
         'header' => get_string('exportheader_userid', 'report_idgprogress'),
         'value'  => function($user, $sdata, $ucustom) {
             return $user->id;
         },
-    ];
-}
-if (in_array('username', $requestedfields, true)) {
-    $columns['username'] = [
+    ],
+    'username' => [
         'header' => get_string('exportheader_username', 'report_idgprogress'),
         'value'  => function($user, $sdata, $ucustom) {
             return $user->username;
         },
-    ];
-}
-if (in_array('fullname', $requestedfields, true)) {
-    $columns['fullname'] = [
+    ],
+    'fullname' => [
         'header' => get_string('exportheader_fullname', 'report_idgprogress'),
         'value'  => function($user, $sdata, $ucustom) {
             return fullname($user);
         },
-    ];
-}
-if (in_array('gender', $requestedfields, true)) {
-    $columns['gender'] = [
+    ],
+    'gender' => [
         'header' => get_string('exportheader_gender', 'report_idgprogress'),
         'value'  => function($user, $sdata, $ucustom) {
             $g = report_idgprogress_get_user_gender($user, $ucustom);
             return $g !== '-' ? $g : '';
         },
-    ];
-}
-if (in_array('email', $requestedfields, true)) {
-    $columns['email'] = [
+    ],
+    'email' => [
         'header' => get_string('exportheader_email', 'report_idgprogress'),
         'value'  => function($user, $sdata, $ucustom) {
             return $user->email;
         },
-    ];
-}
-if (in_array('institution', $requestedfields, true)) {
-    $columns['institution'] = [
+    ],
+    'institution' => [
         'header' => get_string('exportheader_institution', 'report_idgprogress'),
         'value'  => function($user, $sdata, $ucustom) {
             return !empty($user->institution) ? $user->institution : '';
         },
-    ];
-}
-if (in_array('department', $requestedfields, true)) {
-    $columns['department'] = [
+    ],
+    'department' => [
         'header' => get_string('exportheader_department', 'report_idgprogress'),
         'value'  => function($user, $sdata, $ucustom) {
             return !empty($user->department) ? $user->department : '';
         },
-    ];
-}
-
-// Custom profile fields.
-foreach ($othercustomfields as $cf) {
-    $fieldkey = 'custom_' . $cf->shortname;
-    if (in_array($fieldkey, $requestedfields, true) || in_array('all_custom', $requestedfields, true)) {
-        $fieldname = strip_tags(format_string($cf->name, true, ['context' => $context]));
-        $cfshortname = $cf->shortname;
-        $columns[$fieldkey] = [
-            'header' => $fieldname,
-            'value'  => function($user, $sdata, $ucustom) use ($cfshortname) {
-                return !empty($ucustom[$cfshortname]) ? (string)$ucustom[$cfshortname] : '';
-            },
-        ];
-    }
-}
-
-if (in_array('activities_count', $requestedfields, true)) {
-    $columns['completedactivities'] = [
-        'header' => get_string('exportheader_completedactivities', 'report_idgprogress'),
-        'value'  => function($user, $sdata, $ucustom) {
-            return $sdata->completedactivities;
-        },
-    ];
-    $columns['totalactivities'] = [
-        'header' => get_string('exportheader_totalactivities', 'report_idgprogress'),
-        'value'  => function($user, $sdata, $ucustom) {
-            return $sdata->totalactivities;
-        },
-    ];
-}
-if (in_array('progress', $requestedfields, true)) {
-    $columns['progress'] = [
+    ],
+    'activities_count' => [
+        'multi' => true,
+        'cols'  => [
+            'completedactivities' => [
+                'header' => get_string('exportheader_completedactivities', 'report_idgprogress'),
+                'value'  => function($user, $sdata, $ucustom) {
+                    return $sdata->completedactivities;
+                },
+            ],
+            'totalactivities' => [
+                'header' => get_string('exportheader_totalactivities', 'report_idgprogress'),
+                'value'  => function($user, $sdata, $ucustom) {
+                    return $sdata->totalactivities;
+                },
+            ],
+        ],
+    ],
+    'progress' => [
         'header' => get_string('exportheader_progress', 'report_idgprogress'),
         'value'  => function($user, $sdata, $ucustom) {
             return $sdata->percentage . '%';
         },
-    ];
-}
-if (in_array('coursestatus', $requestedfields, true)) {
-    $columns['coursestatus'] = [
+    ],
+    'coursestatus' => [
         'header' => get_string('exportheader_coursestatus', 'report_idgprogress'),
         'value'  => function($user, $sdata, $ucustom) {
             return get_string('status_' . $sdata->status, 'report_idgprogress');
         },
-    ];
-}
-if (in_array('completeddate', $requestedfields, true)) {
-    $columns['completeddate'] = [
+    ],
+    'completeddate' => [
         'header' => get_string('exportheader_completeddate', 'report_idgprogress'),
         'value'  => function($user, $sdata, $ucustom) {
             return $sdata->timecompleted > 0
                 ? userdate($sdata->timecompleted, get_string('strftimedatetime', 'langconfig'))
                 : get_string('na', 'report_idgprogress');
         },
+    ],
+];
+
+// Register custom profile fields into available columns.
+foreach ($othercustomfields as $cf) {
+    $fieldkey = 'custom_' . $cf->shortname;
+    $fieldname = strip_tags(format_string($cf->name, true, ['context' => $context]));
+    $cfshortname = $cf->shortname;
+    $availablecolumns[$fieldkey] = [
+        'header' => $fieldname,
+        'value'  => function($user, $sdata, $ucustom) use ($cfshortname) {
+            return !empty($ucustom[$cfshortname]) ? (string)$ucustom[$cfshortname] : '';
+        },
     ];
 }
 
-// Individual activity details.
-if (in_array('activities_detail', $requestedfields, true)) {
+// Register individual activity detail columns into available columns.
+if (!empty($trackedactivities)) {
+    $actcols = [];
     foreach ($trackedactivities as $cmid => $activity) {
         $actname = strip_tags(format_string($activity->name, true, ['context' => $context]));
-        $columns['act_' . $cmid] = [
+        $actcols['act_' . $cmid] = [
             'header' => get_string('activity_header_prefix', 'report_idgprogress', $actname),
             'value'  => function($user, $sdata, $ucustom) use ($cmid) {
                 if (isset($sdata->activitystates[$cmid])) {
@@ -239,6 +220,26 @@ if (in_array('activities_detail', $requestedfields, true)) {
                 return get_string('na', 'report_idgprogress');
             },
         ];
+    }
+    $availablecolumns['activities_detail'] = [
+        'multi' => true,
+        'cols'  => $actcols,
+    ];
+}
+
+// Build columns strictly in the exact order requested by the user.
+$columns = [];
+foreach ($requestedfields as $fieldkey) {
+    if (!isset($availablecolumns[$fieldkey])) {
+        continue;
+    }
+    $coldef = $availablecolumns[$fieldkey];
+    if (!empty($coldef['multi'])) {
+        foreach ($coldef['cols'] as $subk => $subdef) {
+            $columns[$subk] = $subdef;
+        }
+    } else {
+        $columns[$fieldkey] = $coldef;
     }
 }
 
