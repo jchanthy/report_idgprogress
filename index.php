@@ -287,7 +287,7 @@ $sitecustomfields = report_idgprogress_get_custom_profile_fields();
 <div class="modal fade" id="idgExportModal" tabindex="-1" aria-labelledby="idgExportModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
-            <form method="get" action="<?php echo s(new moodle_url('/report/idgprogress/export.php')); ?>">
+            <form method="get" action="<?php echo s(new moodle_url('/report/idgprogress/export.php')); ?>" onsubmit="report_idgprogress_on_export_submit()">
                 <input type="hidden" name="id" value="<?php echo (int)$course->id; ?>" />
                 <?php if ($groupid): ?>
                     <input type="hidden" name="group" value="<?php echo (int)$groupid; ?>" />
@@ -322,7 +322,7 @@ $sitecustomfields = report_idgprogress_get_custom_profile_fields();
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="format" id="exportFormatCsv" value="csv">
                                     <label class="form-check-label fw-bold text-primary" for="exportFormatCsv">
-                                        <i class="fa fa-file-text-o fa-lg me-1"></i> <?php echo s(report_idgprogress_str('formatcsv', 'CSV with BOM (.csv)')); ?>
+                                        <i class="fa fa-file-text-o fa-lg me-1"></i> <?php echo s(report_idgprogress_str('formatcsv', 'CSV (.csv)')); ?>
                                     </label>
                                 </div>
                             </div>
@@ -445,7 +445,7 @@ $sitecustomfields = report_idgprogress_get_custom_profile_fields();
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-dismiss="modal" onclick="report_idgprogress_close_export_modal()">
                         <?php echo s(report_idgprogress_str('cancel', 'Cancel')); ?>
                     </button>
-                    <button type="submit" class="btn btn-success fw-bold px-4">
+                    <button type="submit" class="btn btn-success fw-bold px-4" onclick="report_idgprogress_on_export_submit()">
                         <i class="fa fa-download me-1"></i> <?php echo s(report_idgprogress_str('download', 'Download')); ?>
                     </button>
                 </div>
@@ -489,16 +489,25 @@ function report_idgprogress_close_export_modal() {
         }
     } else if (typeof jQuery !== 'undefined' && typeof jQuery(modalEl).modal === 'function') {
         jQuery(modalEl).modal('hide');
-    } else {
-        modalEl.classList.remove('show');
-        modalEl.style.display = 'none';
-        modalEl.setAttribute('aria-hidden', 'true');
-        modalEl.removeAttribute('aria-modal');
-        var backdrop = document.getElementById('idg-modal-backdrop');
-        if (backdrop) {
-            backdrop.remove();
-        }
     }
+    modalEl.classList.remove('show');
+    modalEl.style.display = 'none';
+    modalEl.setAttribute('aria-hidden', 'true');
+    modalEl.removeAttribute('aria-modal');
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+    var backdrops = document.querySelectorAll('.modal-backdrop, #idg-modal-backdrop');
+    backdrops.forEach(function(el) {
+        el.remove();
+    });
+}
+
+function report_idgprogress_on_export_submit() {
+    setTimeout(function() {
+        report_idgprogress_close_export_modal();
+    }, 350);
+    return true;
 }
 
 function report_idgprogress_toggle_fields(selectAll) {

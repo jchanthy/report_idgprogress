@@ -42,7 +42,7 @@ $string['avgprogress'] = 'វឌ្ឍនភាពមធ្យម';
 $string['searchparticipant'] = 'ស្វែងរកសិក្ខាកាម...';
 $string['search'] = 'ស្វែងរក';
 $string['clear'] = 'សម្អាត';
-$string['exportcsv'] = 'ទាញយកជា CSV (គាំទ្រ Excel និងភាសាខ្មែរ)';
+$string['exportcsv'] = 'ទាញយកជា CSV';
 $string['exportexcel'] = 'ទាញយករបាយការណ៍';
 
 // Table columns.
@@ -92,7 +92,7 @@ $string['activity_header_prefix'] = 'សកម្មភាព: {$a}';
 $string['exportoptions'] = 'ទាញយករបាយការណ៍';
 $string['exportformat'] = 'ទម្រង់ឯកសារ';
 $string['formatexcel'] = 'Microsoft Excel (.xlsx)';
-$string['formatcsv'] = 'CSV គាំទ្រភាសាខ្មែរ (.csv)';
+$string['formatcsv'] = 'CSV (.csv)';
 $string['selectfields'] = 'ជ្រើសរើសទិន្នន័យសម្រាប់ទាញយក';
 $string['selectall'] = 'ជ្រើសរើសទាំងអស់';
 $string['deselectall'] = 'ដោះការជ្រើសរើស';

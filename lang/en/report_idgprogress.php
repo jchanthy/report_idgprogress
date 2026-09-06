@@ -42,7 +42,7 @@ $string['avgprogress'] = 'Average Progress';
 $string['searchparticipant'] = 'Search participants...';
 $string['search'] = 'Search';
 $string['clear'] = 'Clear';
-$string['exportcsv'] = 'Export to CSV (Excel with BOM)';
+$string['exportcsv'] = 'Export to CSV';
 $string['exportexcel'] = 'Export Report';
 
 // Table columns.
@@ -92,7 +92,7 @@ $string['activity_header_prefix'] = 'Activity: {$a}';
 $string['exportoptions'] = 'Export Report';
 $string['exportformat'] = 'Export Format';
 $string['formatexcel'] = 'Microsoft Excel (.xlsx)';
-$string['formatcsv'] = 'CSV with BOM (.csv)';
+$string['formatcsv'] = 'CSV (.csv)';
 $string['selectfields'] = 'Select Fields to Export';
 $string['selectall'] = 'Select All';
 $string['deselectall'] = 'Deselect All';
