@@ -278,64 +278,43 @@ $cohortcache = $metrics->cohortcache ?? null;
 <!-- Controls: Filter, Search, and Export -->
 <div class="card shadow-sm mb-4 idg-toolbar-card">
     <div class="card-body">
+        <!-- Row 1: Filters & Export Action -->
         <div class="row align-items-end g-3">
             <?php if ($groupmode): ?>
                 <!-- 1. Group Selector -->
-                <div class="col-12 col-md-6 col-lg-3 idg-toolbar-col mb-2 mb-lg-0">
+                <div class="col-12 col-md-5 col-lg-4 idg-toolbar-col">
                     <div class="idg-group-selector-wrapper">
                         <?php groups_print_course_menu($course, $baseurl); ?>
                     </div>
                 </div>
 
-                <!-- 2. Progress Filter & Search Combined Form -->
-                <div class="col-12 col-md-12 col-lg-7 idg-toolbar-col mb-2 mb-lg-0">
-                    <form method="get" action="<?php echo s(new moodle_url('/report/idgprogress/index.php')); ?>" class="m-0 p-0">
+                <!-- 2. Progress Filter -->
+                <div class="col-12 col-md-4 col-lg-4 idg-toolbar-col">
+                    <form method="get" action="<?php echo s(new moodle_url('/report/idgprogress/index.php')); ?>" class="m-0 p-0" id="idgProgressFilterForm">
                         <input type="hidden" name="id" value="<?php echo (int)$course->id; ?>" />
                         <?php if ($groupid): ?>
                             <input type="hidden" name="group" value="<?php echo (int)$groupid; ?>" />
                         <?php endif; ?>
-                        <div class="row g-2 align-items-end">
-                            <div class="col-12 col-sm-5">
-                                <label for="dashboardProgressFilter" class="form-label d-block fw-semibold small text-muted mb-1 text-truncate">
-                                    <?php echo s(report_idgprogress_str('filterbyprogress', 'Filter by Progress')); ?>
-                                </label>
-                                <select name="progress_filter" id="dashboardProgressFilter" class="form-select form-control" onchange="this.form.submit()">
-                                    <option value="all" <?php echo $progressfilter === 'all' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_all', 'All Students (All Progress)')); ?></option>
-                                    <option value="inprogress" <?php echo $progressfilter === 'inprogress' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_inprogress', 'In Progress Only (1% - 99%)')); ?></option>
-                                    <option value="completed" <?php echo $progressfilter === 'completed' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_completed', 'Completed Only (100%)')); ?></option>
-                                    <option value="notstarted" <?php echo $progressfilter === 'notstarted' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_notstarted', 'Not Started Only (0%)')); ?></option>
-                                    <option value="under100" <?php echo $progressfilter === 'under100' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_under100', 'Under 100% Progress (< 100%)')); ?></option>
-                                    <option value="under50" <?php echo $progressfilter === 'under50' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_under50', 'Under 50% Progress (< 50%)')); ?></option>
-                                </select>
-                            </div>
-                            <div class="col-12 col-sm-7">
-                                <label for="dashboardSearchInput" class="form-label d-block fw-semibold small text-muted mb-1 text-truncate">
-                                    <?php echo s(get_string('searchparticipant', 'report_idgprogress')); ?>
-                                </label>
-                                <div class="input-group">
-                                    <input type="text" name="search" id="dashboardSearchInput" class="form-control"
-                                           placeholder="<?php echo s(get_string('searchparticipant', 'report_idgprogress')); ?>"
-                                           value="<?php echo s($search); ?>" />
-                                    <div class="input-group-append">
-                                        <button type="submit" class="btn btn-secondary text-nowrap">
-                                            <i class="fa fa-search mr-2 me-2" aria-hidden="true"></i><span><?php echo s(get_string('search', 'report_idgprogress')); ?></span>
-                                        </button>
-                                        <?php if ($search !== '' || $progressfilter !== 'all'): ?>
-                                            <a href="<?php echo s(new moodle_url('/report/idgprogress/index.php', ['id' => $course->id, 'group' => $groupid])); ?>"
-                                               class="btn btn-outline-secondary text-nowrap" title="<?php echo s(get_string('clear', 'report_idgprogress')); ?>">
-                                                <?php echo s(get_string('clear', 'report_idgprogress')); ?>
-                                            </a>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <?php if ($search !== ''): ?>
+                            <input type="hidden" name="search" value="<?php echo s($search); ?>" />
+                        <?php endif; ?>
+                        <label for="dashboardProgressFilter" class="form-label d-block fw-semibold small text-muted mb-1 text-truncate">
+                            <?php echo s(report_idgprogress_str('filterbyprogress', 'Filter by Progress')); ?>
+                        </label>
+                        <select name="progress_filter" id="dashboardProgressFilter" class="form-select form-control" onchange="this.form.submit()">
+                            <option value="all" <?php echo $progressfilter === 'all' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_all', 'All Students (All Progress)')); ?></option>
+                            <option value="inprogress" <?php echo $progressfilter === 'inprogress' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_inprogress', 'In Progress Only (1% - 99%)')); ?></option>
+                            <option value="completed" <?php echo $progressfilter === 'completed' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_completed', 'Completed Only (100%)')); ?></option>
+                            <option value="notstarted" <?php echo $progressfilter === 'notstarted' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_notstarted', 'Not Started Only (0%)')); ?></option>
+                            <option value="under100" <?php echo $progressfilter === 'under100' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_under100', 'Under 100% Progress (< 100%)')); ?></option>
+                            <option value="under50" <?php echo $progressfilter === 'under50' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_under50', 'Under 50% Progress (< 50%)')); ?></option>
+                        </select>
                     </form>
                 </div>
 
                 <!-- 3. Export Button -->
-                <div class="col-12 col-md-6 col-lg-2 idg-toolbar-col text-lg-end">
-                    <button type="button" class="btn btn-success text-nowrap shadow-sm idg-btn-export w-100"
+                <div class="col-12 col-md-3 col-lg-4 idg-toolbar-col text-md-end">
+                    <button type="button" class="btn btn-success text-nowrap shadow-sm idg-btn-export"
                             id="btnIdgOpenExport"
                             data-bs-toggle="modal" data-bs-target="#idgExportModal"
                             data-toggle="modal" data-target="#idgExportModal"
@@ -344,52 +323,30 @@ $cohortcache = $metrics->cohortcache ?? null;
                     </button>
                 </div>
             <?php else: ?>
-                <!-- Progress Filter & Search Combined Form (No Groups) -->
-                <div class="col-12 col-lg-9 idg-toolbar-col mb-2 mb-lg-0">
-                    <form method="get" action="<?php echo s(new moodle_url('/report/idgprogress/index.php')); ?>" class="m-0 p-0">
+                <!-- Progress Filter (No Groups) -->
+                <div class="col-12 col-md-8 col-lg-8 idg-toolbar-col">
+                    <form method="get" action="<?php echo s(new moodle_url('/report/idgprogress/index.php')); ?>" class="m-0 p-0" id="idgProgressFilterForm">
                         <input type="hidden" name="id" value="<?php echo (int)$course->id; ?>" />
-                        <div class="row g-2 align-items-end">
-                            <div class="col-12 col-sm-5">
-                                <label for="dashboardProgressFilter" class="form-label d-block fw-semibold small text-muted mb-1 text-truncate">
-                                    <?php echo s(report_idgprogress_str('filterbyprogress', 'Filter by Progress')); ?>
-                                </label>
-                                <select name="progress_filter" id="dashboardProgressFilter" class="form-select form-control" onchange="this.form.submit()">
-                                    <option value="all" <?php echo $progressfilter === 'all' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_all', 'All Students (All Progress)')); ?></option>
-                                    <option value="inprogress" <?php echo $progressfilter === 'inprogress' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_inprogress', 'In Progress Only (1% - 99%)')); ?></option>
-                                    <option value="completed" <?php echo $progressfilter === 'completed' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_completed', 'Completed Only (100%)')); ?></option>
-                                    <option value="notstarted" <?php echo $progressfilter === 'notstarted' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_notstarted', 'Not Started Only (0%)')); ?></option>
-                                    <option value="under100" <?php echo $progressfilter === 'under100' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_under100', 'Under 100% Progress (< 100%)')); ?></option>
-                                    <option value="under50" <?php echo $progressfilter === 'under50' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_under50', 'Under 50% Progress (< 50%)')); ?></option>
-                                </select>
-                            </div>
-                            <div class="col-12 col-sm-7">
-                                <label for="dashboardSearchInput" class="form-label d-block fw-semibold small text-muted mb-1 text-truncate">
-                                    <?php echo s(get_string('searchparticipant', 'report_idgprogress')); ?>
-                                </label>
-                                <div class="input-group">
-                                    <input type="text" name="search" id="dashboardSearchInput" class="form-control"
-                                           placeholder="<?php echo s(get_string('searchparticipant', 'report_idgprogress')); ?>"
-                                           value="<?php echo s($search); ?>" />
-                                    <div class="input-group-append">
-                                        <button type="submit" class="btn btn-secondary text-nowrap">
-                                            <i class="fa fa-search mr-2 me-2" aria-hidden="true"></i><span><?php echo s(get_string('search', 'report_idgprogress')); ?></span>
-                                        </button>
-                                        <?php if ($search !== '' || $progressfilter !== 'all'): ?>
-                                            <a href="<?php echo s(new moodle_url('/report/idgprogress/index.php', ['id' => $course->id])); ?>"
-                                               class="btn btn-outline-secondary text-nowrap" title="<?php echo s(get_string('clear', 'report_idgprogress')); ?>">
-                                                <?php echo s(get_string('clear', 'report_idgprogress')); ?>
-                                            </a>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <?php if ($search !== ''): ?>
+                            <input type="hidden" name="search" value="<?php echo s($search); ?>" />
+                        <?php endif; ?>
+                        <label for="dashboardProgressFilter" class="form-label d-block fw-semibold small text-muted mb-1 text-truncate">
+                            <?php echo s(report_idgprogress_str('filterbyprogress', 'Filter by Progress')); ?>
+                        </label>
+                        <select name="progress_filter" id="dashboardProgressFilter" class="form-select form-control" onchange="this.form.submit()">
+                            <option value="all" <?php echo $progressfilter === 'all' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_all', 'All Students (All Progress)')); ?></option>
+                            <option value="inprogress" <?php echo $progressfilter === 'inprogress' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_inprogress', 'In Progress Only (1% - 99%)')); ?></option>
+                            <option value="completed" <?php echo $progressfilter === 'completed' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_completed', 'Completed Only (100%)')); ?></option>
+                            <option value="notstarted" <?php echo $progressfilter === 'notstarted' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_notstarted', 'Not Started Only (0%)')); ?></option>
+                            <option value="under100" <?php echo $progressfilter === 'under100' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_under100', 'Under 100% Progress (< 100%)')); ?></option>
+                            <option value="under50" <?php echo $progressfilter === 'under50' ? 'selected' : ''; ?>><?php echo s(report_idgprogress_str('filter_under50', 'Under 50% Progress (< 50%)')); ?></option>
+                        </select>
                     </form>
                 </div>
 
                 <!-- Export Button (No Groups) -->
-                <div class="col-12 col-lg-3 idg-toolbar-col text-lg-end">
-                    <button type="button" class="btn btn-success text-nowrap shadow-sm idg-btn-export w-100"
+                <div class="col-12 col-md-4 col-lg-4 idg-toolbar-col text-md-end">
+                    <button type="button" class="btn btn-success text-nowrap shadow-sm idg-btn-export"
                             id="btnIdgOpenExport"
                             data-bs-toggle="modal" data-bs-target="#idgExportModal"
                             data-toggle="modal" data-target="#idgExportModal"
@@ -398,6 +355,40 @@ $cohortcache = $metrics->cohortcache ?? null;
                     </button>
                 </div>
             <?php endif; ?>
+        </div>
+
+        <!-- Row 2: Participant Search (Placed Bellow) -->
+        <div class="row pt-3 mt-3 border-top">
+            <div class="col-12 col-md-8 col-lg-6">
+                <form method="get" action="<?php echo s(new moodle_url('/report/idgprogress/index.php')); ?>" class="m-0 p-0 idg-search-form">
+                    <input type="hidden" name="id" value="<?php echo (int)$course->id; ?>" />
+                    <?php if ($groupid): ?>
+                        <input type="hidden" name="group" value="<?php echo (int)$groupid; ?>" />
+                    <?php endif; ?>
+                    <?php if ($progressfilter !== 'all'): ?>
+                        <input type="hidden" name="progress_filter" value="<?php echo s($progressfilter); ?>" />
+                    <?php endif; ?>
+                    <label for="dashboardSearchInput" class="form-label d-block fw-semibold small text-muted mb-1 text-truncate">
+                        <?php echo s(get_string('searchparticipant', 'report_idgprogress')); ?>
+                    </label>
+                    <div class="input-group">
+                        <input type="text" name="search" id="dashboardSearchInput" class="form-control"
+                               placeholder="<?php echo s(get_string('searchparticipant', 'report_idgprogress')); ?>"
+                               value="<?php echo s($search); ?>" />
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-secondary text-nowrap">
+                                <i class="fa fa-search mr-2 me-2" aria-hidden="true"></i><span><?php echo s(get_string('search', 'report_idgprogress')); ?></span>
+                            </button>
+                            <?php if ($search !== '' || $progressfilter !== 'all'): ?>
+                                <a href="<?php echo s(new moodle_url('/report/idgprogress/index.php', $groupid ? ['id' => $course->id, 'group' => $groupid] : ['id' => $course->id])); ?>"
+                                   class="btn btn-outline-secondary text-nowrap" title="<?php echo s(get_string('clear', 'report_idgprogress')); ?>">
+                                    <?php echo s(get_string('clear', 'report_idgprogress')); ?>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
