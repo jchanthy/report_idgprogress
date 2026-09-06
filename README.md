@@ -8,6 +8,7 @@ A production-ready Moodle Course Report plugin developed for the Cambodia Academ
 
 - **Moodle 4.1 – 4.5+ Compatible:** Built according to Moodle 4.x/5.x architectural guidelines, strict PSR-12 coding style, and modern responsive UI.
 - **Khmer Unicode Preservation:** Full support for Khmer script in names, departments, and ministries. All CSV exports stream the UTF-8 Byte Order Mark (`\xEF\xBB\xBF`) at byte 0, ensuring Microsoft Excel opens Cambodian civil servant details without font corruption or mojibake.
+- **Custom User Profile Fields & Gender:** Automatically extracts and displays Gender (ភេទ) in the dashboard and exports all site-defined custom profile fields (e.g., position, civil servant ID, phone) dynamically.
 - **Completion Tracking API Integration:** Uses `$CFG->libdir . '/completionlib.php'` and `completion_info` to evaluate both course-level completion and activity-level criteria.
 - **Group & Search Filtering:** Supports Moodle group modes (Separate Groups, Visible Groups) and real-time parameterized search by name, username, or email.
 - **Cohort Analytics:** Summary dashboard cards displaying total enrollment, completed courses, in-progress learners, and average completion percentage.

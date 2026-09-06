@@ -394,3 +394,130 @@ function report_idgprogress_render_status_badge(string $status): string {
 
     return '<span class="' . $badgetype . ' px-2 py-1" style="font-size: 0.85rem; font-weight: 500;">' . s($label) . '</span>';
 }
+
+/**
+ * Retrieve all custom user profile fields defined on this Moodle site.
+ *
+ * @return array Array of user_info_field records indexed by id.
+ */
+function report_idgprogress_get_custom_profile_fields(): array {
+    global $DB;
+    try {
+        return $DB->get_records('user_info_field', null, 'sortorder ASC, id ASC');
+    } catch (\Throwable $e) {
+        return [];
+    }
+}
+
+/**
+ * Bulk load custom profile field data for a list of user IDs in a single query.
+ *
+ * @param array $userids Array of user IDs.
+ * @return array Array of [userid => [field_shortname => formatted_value]].
+ */
+function report_idgprogress_get_users_custom_fields(array $userids): array {
+    global $DB;
+
+    if (empty($userids)) {
+        return [];
+    }
+
+    $fields = report_idgprogress_get_custom_profile_fields();
+    if (empty($fields)) {
+        return [];
+    }
+
+    // Pre-parse menu/dropdown options for fast display mapping.
+    $menuoptions = [];
+    foreach ($fields as $field) {
+        if ($field->datatype === 'menu' && !empty($field->param1)) {
+            $lines = explode("\n", str_replace("\r", "", $field->param1));
+            $options = [];
+            foreach ($lines as $line) {
+                $trimmed = trim($line);
+                if ($trimmed !== '') {
+                    $options[] = $trimmed;
+                }
+            }
+            $menuoptions[$field->id] = $options;
+        }
+    }
+
+    $userids = array_unique(array_map('intval', $userids));
+    [$insql, $params] = $DB->get_in_or_equal($userids);
+
+    try {
+        $records = $DB->get_records_sql(
+            "SELECT d.id, d.userid, d.fieldid, d.data
+               FROM {user_info_data} d
+              WHERE d.userid {$insql}",
+            $params
+        );
+    } catch (\Throwable $e) {
+        return [];
+    }
+
+    $userdata = [];
+    foreach ($userids as $uid) {
+        $userdata[$uid] = [];
+    }
+
+    foreach ($records as $rec) {
+        if (!isset($fields[$rec->fieldid])) {
+            continue;
+        }
+        $field = $fields[$rec->fieldid];
+        $val = trim((string)$rec->data);
+
+        // Map numeric index to menu label if applicable.
+        if ($field->datatype === 'menu' && isset($menuoptions[$field->id])) {
+            $opts = $menuoptions[$field->id];
+            if (is_numeric($val) && isset($opts[(int)$val])) {
+                $val = $opts[(int)$val];
+            }
+        }
+
+        $userdata[$rec->userid][$field->shortname] = $val;
+    }
+
+    return $userdata;
+}
+
+/**
+ * Extract gender value from user record or custom profile fields.
+ *
+ * @param stdClass $user User record.
+ * @param array $usercustomfields Array of custom field shortname => value for this user.
+ * @return string Gender string or '-' if not specified.
+ */
+function report_idgprogress_get_user_gender(stdClass $user, array $usercustomfields = []): string {
+    // 1. Check exact common shortnames in custom fields.
+    $targetkeys = ['gender', 'sex', 'Gender', 'Sex', 'user_gender', 'gender_km'];
+    foreach ($targetkeys as $key) {
+        if (!empty($usercustomfields[$key])) {
+            return trim($usercustomfields[$key]);
+        }
+    }
+
+    // 2. Check case-insensitively across custom fields.
+    foreach ($usercustomfields as $k => $v) {
+        $lk = strtolower($k);
+        if (($lk === 'gender' || $lk === 'sex' || str_contains($lk, 'gender') || str_contains($lk, 'sex')) && !empty($v)) {
+            return trim((string)$v);
+        }
+    }
+
+    // 3. Check directly on user object properties.
+    if (!empty($user->gender)) {
+        return trim((string)$user->gender);
+    }
+    if (!empty($user->profile_field_gender)) {
+        return trim((string)$user->profile_field_gender);
+    }
+    if (!empty($user->profile['gender'])) {
+        return trim((string)$user->profile['gender']);
+    }
+
+    return '-';
+}
+

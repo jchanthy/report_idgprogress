@@ -185,6 +185,7 @@ $metrics = report_idgprogress_calculate_summary_metrics($course, $completion, $t
 // Pagination and paged user data retrieval.
 $totalcount = count($allcohortusers);
 $pagedusers = [];
+$pagedcustomfields = [];
 if ($groupid !== -1 && $totalcount > 0) {
     $pagedusers = report_idgprogress_get_enrolled_users(
         $context,
@@ -194,6 +195,9 @@ if ($groupid !== -1 && $totalcount > 0) {
         $page * $perpage,
         $perpage
     );
+    if (!empty($pagedusers)) {
+        $pagedcustomfields = report_idgprogress_get_users_custom_fields(array_keys($pagedusers));
+    }
 }
 
 if (empty($pagedusers)) {
@@ -206,6 +210,7 @@ if (empty($pagedusers)) {
             <thead class="table-light">
                 <tr>
                     <th scope="col" style="min-width: 200px;"><?php echo s(get_string('table_fullname', 'report_idgprogress')); ?></th>
+                    <th scope="col" class="text-center" style="min-width: 80px;"><?php echo s(get_string('table_gender', 'report_idgprogress')); ?></th>
                     <th scope="col"><?php echo s(get_string('table_email', 'report_idgprogress')); ?></th>
                     <th scope="col"><?php echo s(get_string('table_institution', 'report_idgprogress')); ?></th>
                     <th scope="col"><?php echo s(get_string('table_department', 'report_idgprogress')); ?></th>
@@ -228,6 +233,8 @@ if (empty($pagedusers)) {
                     $userurl = new moodle_url('/user/view.php', ['id' => $user->id, 'course' => $course->id]);
                     $userpic = $OUTPUT->user_picture($user, ['size' => 35, 'link' => false]);
                     $fullname = fullname($user);
+                    $usercustom = $pagedcustomfields[$user->id] ?? [];
+                    $gender = report_idgprogress_get_user_gender($user, $usercustom);
                     $institution = !empty($user->institution) ? $user->institution : '-';
                     $department = !empty($user->department) ? $user->department : '-';
                     $activitiesratio = $studentdata->completedactivities . ' / ' . $studentdata->totalactivities;
@@ -246,6 +253,9 @@ if (empty($pagedusers)) {
                                     <div class="text-muted small">@<?php echo s($user->username); ?></div>
                                 </div>
                             </div>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark border px-2 py-1"><?php echo s($gender); ?></span>
                         </td>
                         <td>
                             <span class="text-muted"><?php echo s($user->email); ?></span>

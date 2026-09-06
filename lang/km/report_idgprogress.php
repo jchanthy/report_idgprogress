@@ -47,6 +47,7 @@ $string['exportexcel'] = 'ទាញយករបាយការណ៍';
 
 // Table columns.
 $string['table_fullname'] = 'ឈ្មោះសិក្ខាកាម';
+$string['table_gender'] = 'ភេទ';
 $string['table_email'] = 'អ៊ីមែល';
 $string['table_institution'] = 'ស្ថាប័ន / ក្រសួង';
 $string['table_department'] = 'នាយកដ្ឋាន / អង្គភាព';
@@ -75,6 +76,7 @@ $string['exportfilename'] = 'IDG_Progress_Report';
 $string['exportheader_userid'] = 'អត្តសញ្ញាណអ្នកប្រើប្រាស់';
 $string['exportheader_username'] = 'ឈ្មោះគណនី';
 $string['exportheader_fullname'] = 'ឈ្មោះពេញ';
+$string['exportheader_gender'] = 'ភេទ';
 $string['exportheader_email'] = 'អ៊ីមែល';
 $string['exportheader_institution'] = 'ស្ថាប័ន';
 $string['exportheader_department'] = 'នាយកដ្ឋាន';
@@ -83,6 +85,7 @@ $string['exportheader_totalactivities'] = 'សកម្មភាពសរុប'
 $string['exportheader_progress'] = 'វឌ្ឍនភាព (%)';
 $string['exportheader_coursestatus'] = 'ស្ថានភាពវគ្គសិក្សា';
 $string['exportheader_completeddate'] = 'កាលបរិច្ឆេទបញ្ចប់វគ្គសិក្សា';
+$string['customfield_header_prefix'] = 'ព័ត៌មានបន្ថែម: {$a}';
 $string['activity_header_prefix'] = 'សកម្មភាព: {$a}';
 
 // Privacy metadata.

@@ -54,6 +54,7 @@ $trackedactivities = $completion->is_enabled() ? report_idgprogress_get_tracked_
 
 // Retrieve all cohort participants.
 $users = [];
+$alluserscustomfields = [];
 if ($groupid !== -1) {
     $users = report_idgprogress_get_enrolled_users(
         $context,
@@ -63,6 +64,19 @@ if ($groupid !== -1) {
         0,
         0
     );
+    if (!empty($users)) {
+        $alluserscustomfields = report_idgprogress_get_users_custom_fields(array_keys($users));
+    }
+}
+
+// Retrieve site custom profile fields.
+$customprofilefields = report_idgprogress_get_custom_profile_fields();
+$othercustomfields = [];
+foreach ($customprofilefields as $cf) {
+    $ls = strtolower($cf->shortname);
+    if ($ls !== 'gender' && $ls !== 'sex' && !str_contains($ls, 'gender') && !str_contains($ls, 'sex')) {
+        $othercustomfields[$cf->shortname] = $cf;
+    }
 }
 
 // Release session lock before initiating file stream.
@@ -96,15 +110,23 @@ $headers = [
     get_string('exportheader_userid', 'report_idgprogress'),
     get_string('exportheader_username', 'report_idgprogress'),
     get_string('exportheader_fullname', 'report_idgprogress'),
+    get_string('exportheader_gender', 'report_idgprogress'),
     get_string('exportheader_email', 'report_idgprogress'),
     get_string('exportheader_institution', 'report_idgprogress'),
     get_string('exportheader_department', 'report_idgprogress'),
-    get_string('exportheader_completedactivities', 'report_idgprogress'),
-    get_string('exportheader_totalactivities', 'report_idgprogress'),
-    get_string('exportheader_progress', 'report_idgprogress'),
-    get_string('exportheader_coursestatus', 'report_idgprogress'),
-    get_string('exportheader_completeddate', 'report_idgprogress'),
 ];
+
+// Append any other custom profile field headers.
+foreach ($othercustomfields as $cf) {
+    $fieldname = strip_tags(format_string($cf->name, true, ['context' => $context]));
+    $headers[] = get_string('customfield_header_prefix', 'report_idgprogress', $fieldname);
+}
+
+$headers[] = get_string('exportheader_completedactivities', 'report_idgprogress');
+$headers[] = get_string('exportheader_totalactivities', 'report_idgprogress');
+$headers[] = get_string('exportheader_progress', 'report_idgprogress');
+$headers[] = get_string('exportheader_coursestatus', 'report_idgprogress');
+$headers[] = get_string('exportheader_completeddate', 'report_idgprogress');
 
 // Append tracked activity names to header row.
 foreach ($trackedactivities as $activity) {
@@ -129,20 +151,29 @@ foreach ($users as $user) {
         : get_string('na', 'report_idgprogress');
 
     $statuslabel = get_string('status_' . $studentdata->status, 'report_idgprogress');
+    $usercustom = $alluserscustomfields[$user->id] ?? [];
+    $gender = report_idgprogress_get_user_gender($user, $usercustom);
 
     $row = [
         $user->id,
         $user->username,
         fullname($user),
+        $gender !== '-' ? $gender : '',
         $user->email,
         !empty($user->institution) ? $user->institution : '',
         !empty($user->department) ? $user->department : '',
-        $studentdata->completedactivities,
-        $studentdata->totalactivities,
-        $studentdata->percentage . '%',
-        $statuslabel,
-        $completeddatestr,
     ];
+
+    // Append other custom profile field values.
+    foreach ($othercustomfields as $shortname => $cf) {
+        $row[] = !empty($usercustom[$shortname]) ? (string)$usercustom[$shortname] : '';
+    }
+
+    $row[] = $studentdata->completedactivities;
+    $row[] = $studentdata->totalactivities;
+    $row[] = $studentdata->percentage . '%';
+    $row[] = $statuslabel;
+    $row[] = $completeddatestr;
 
     // Append individual activity completion details.
     foreach ($trackedactivities as $cmid => $activity) {

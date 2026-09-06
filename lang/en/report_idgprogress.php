@@ -47,6 +47,7 @@ $string['exportexcel'] = 'Export Report';
 
 // Table columns.
 $string['table_fullname'] = 'Participant Name';
+$string['table_gender'] = 'Gender';
 $string['table_email'] = 'Email';
 $string['table_institution'] = 'Institution / Ministry';
 $string['table_department'] = 'Department / Unit';
@@ -75,6 +76,7 @@ $string['exportfilename'] = 'IDG_Progress_Report';
 $string['exportheader_userid'] = 'User ID';
 $string['exportheader_username'] = 'Username';
 $string['exportheader_fullname'] = 'Full Name';
+$string['exportheader_gender'] = 'Gender';
 $string['exportheader_email'] = 'Email';
 $string['exportheader_institution'] = 'Institution';
 $string['exportheader_department'] = 'Department';
@@ -83,6 +85,7 @@ $string['exportheader_totalactivities'] = 'Total Activities';
 $string['exportheader_progress'] = 'Progress (%)';
 $string['exportheader_coursestatus'] = 'Course Status';
 $string['exportheader_completeddate'] = 'Course Completed Date';
+$string['customfield_header_prefix'] = 'Profile: {$a}';
 $string['activity_header_prefix'] = 'Activity: {$a}';
 
 // Privacy metadata.
