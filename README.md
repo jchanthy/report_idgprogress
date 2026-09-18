@@ -12,7 +12,7 @@ A production-ready Moodle Course Report plugin developed for the Cambodia Academ
 - **Completion Tracking API Integration:** Uses `$CFG->libdir . '/completionlib.php'` and `completion_info` to evaluate both course-level completion and activity-level criteria.
 - **Group & Search Filtering:** Supports Moodle group modes (Separate Groups, Visible Groups) and real-time parameterized search by name, username, or email.
 - **Cohort Analytics:** Summary dashboard cards displaying total enrollment, completed courses, in-progress learners, and average completion percentage.
-- **Memory-Efficient CSV Stream:** Exports large cohorts row-by-row via `php://output` while releasing session locks (`\core\session\manager::write_close()`).
+- **External REST & Web Services API:** Provides dual-mode API endpoints (`db/services.php` + `externallib.php` for official Moodle Web Services and `api.php` for direct REST calls) so external systems (SIS, HR, mobile apps, dashboards) can query real-time course progress metrics and student activity completion.
 
 ---
 
@@ -22,16 +22,59 @@ A production-ready Moodle Course Report plugin developed for the Cambodia Academ
 report/idgprogress/
 ├── version.php                         # Plugin version, component declaration, and minimum requirements
 ├── db/
-│   └── access.php                      # Capability definition (report/idgprogress:view)
+│   ├── access.php                      # Capability definition (report/idgprogress:view)
+│   └── services.php                    # External Web Services definitions (functions & service)
 ├── lang/
 │   ├── en/
 │   │   └── report_idgprogress.php      # English language pack
 │   └── km/
 │       └── report_idgprogress.php      # Khmer (ភាសាខ្មែរ) language pack
 ├── lib.php                             # Navigation hooks, completion computation, and UI helpers
+├── externallib.php                     # Moodle Web Services API class (report_idgprogress_external)
+├── api.php                             # Dedicated standalone REST API endpoint for external systems
 ├── index.php                           # Interactive dashboard and paged participant table
-└── export.php                          # UTF-8 BOM CSV streaming export script
+├── export.php                          # UTF-8 BOM CSV streaming export script
+└── styles.css                          # Native participants-style CSS rules
 ```
+
+---
+
+## External API Usage
+
+External systems can access progress data using either **Direct REST** or **Moodle Web Services**:
+
+### 1. Direct REST Endpoint (`api.php`)
+
+```bash
+# Query course progress via Authorization Header:
+curl -H "Authorization: Bearer YOUR_WSTOKEN" \
+     "https://your-moodle.edu.kh/report/idgprogress/api.php?courseid=1284"
+
+# Query course progress with filters:
+curl -H "Authorization: Bearer YOUR_WSTOKEN" \
+     "https://your-moodle.edu.kh/report/idgprogress/api.php?courseid=1284&progress_filter=inprogress&include_activities=1"
+
+# Query individual student detailed progress:
+curl -H "Authorization: Bearer YOUR_WSTOKEN" \
+     "https://your-moodle.edu.kh/report/idgprogress/api.php?courseid=1284&action=user_progress&userid=567"
+```
+
+### 2. Moodle Core Web Services (`/webservice/rest/server.php`)
+
+- **Service Name:** `IDG Progress API` (`idg_progress_service`)
+- **Functions:**
+  - `report_idgprogress_get_course_progress`: Retrieve course metrics, tracked activities, and participant progress list.
+  - `report_idgprogress_get_user_progress`: Retrieve detailed activity-by-activity breakdown for a specific student.
+
+Example Web Service call:
+```bash
+curl -X POST "https://your-moodle.edu.kh/webservice/rest/server.php" \
+     -d "wstoken=YOUR_WSTOKEN" \
+     -d "wsfunction=report_idgprogress_get_course_progress" \
+     -d "moodlewsrestformat=json" \
+     -d "courseid=1284"
+```
+
 
 ---
 

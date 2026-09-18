@@ -127,5 +127,12 @@ $string['minprogress'] = 'Min Progress (%)';
 $string['maxprogress'] = 'Max Progress (%)';
 
 
+// API strings.
+$string['api_service_name'] = 'IDG Progress API';
+$string['api_service_desc'] = 'Web Services API for external systems to retrieve course progress metrics and student activity completion.';
+$string['api_get_course_progress'] = 'Retrieve course progress metrics and participant progress data';
+$string['api_get_user_progress'] = 'Retrieve detailed progress and activity completion for a single student';
+
 // Privacy metadata.
 $string['privacy:metadata'] = 'The IDG Progress Report plugin displays existing completion and enrollment data and does not store any personal data of its own.';
+

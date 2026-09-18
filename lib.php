@@ -780,4 +780,337 @@ function report_idgprogress_str(string $identifier, string $fallback = '', $a = 
     return $identifier;
 }
 
+/**
+ * Retrieve comprehensive course progress payload for API and external systems.
+ *
+ * @param stdClass $course Course record.
+ * @param context_course $context Course context.
+ * @param int $groupid Filter by group ID (0 = all).
+ * @param string $progressfilter Progress filter ('all', 'inprogress', 'completed', 'notstarted', 'under100', 'under50').
+ * @param string $search Search query.
+ * @param int $page Pagination page index (0-based).
+ * @param int $perpage Number of records per page (0 = all).
+ * @param bool $includeactivities Whether to include per-activity completion details.
+ * @return array Formatted array matching external API response schema.
+ */
+function report_idgprogress_get_api_progress_data(
+    stdClass $course,
+    context_course $context,
+    int $groupid = 0,
+    string $progressfilter = 'all',
+    string $search = '',
+    int $page = 0,
+    int $perpage = 0,
+    bool $includeactivities = false
+): array {
+    global $CFG, $DB;
+    require_once($CFG->libdir . '/completionlib.php');
+
+    $completion = new completion_info($course);
+    $iscompletionenabled = $completion->is_enabled();
+    $trackedactivities = $iscompletionenabled ? report_idgprogress_get_tracked_activities($completion) : [];
+
+    // Summary metrics on the full cohort.
+    $allcohortusers = [];
+    if ($groupid !== -1) {
+        $allcohortusers = report_idgprogress_get_enrolled_users($context, $groupid, $search, 'u.lastname ASC, u.firstname ASC', 0, 0);
+    }
+    $metrics = report_idgprogress_calculate_summary_metrics($course, $completion, $trackedactivities, $allcohortusers);
+    $cohortcache = $metrics->cohortcache ?? null;
+
+    // Filter cohort participants by progress status if active.
+    $filteredcohortusers = [];
+    if ($groupid !== -1 && !empty($allcohortusers)) {
+        if ($progressfilter !== 'all') {
+            foreach ($allcohortusers as $uid => $user) {
+                $sdata = report_idgprogress_get_student_completion_data(
+                    $course,
+                    $completion,
+                    $trackedactivities,
+                    $user,
+                    $cohortcache
+                );
+                $include = false;
+                switch ($progressfilter) {
+                    case 'inprogress':
+                        $include = ($sdata->status === 'inprogress');
+                        break;
+                    case 'completed':
+                        $include = ($sdata->status === 'completed');
+                        break;
+                    case 'notstarted':
+                        $include = ($sdata->status === 'notstarted');
+                        break;
+                    case 'under100':
+                        $include = ($sdata->percentage < 100);
+                        break;
+                    case 'under50':
+                        $include = ($sdata->percentage < 50);
+                        break;
+                    default:
+                        $include = true;
+                        break;
+                }
+                if ($include) {
+                    $filteredcohortusers[$uid] = $user;
+                }
+            }
+        } else {
+            $filteredcohortusers = $allcohortusers;
+        }
+    }
+
+    $totalparticipants = count($filteredcohortusers);
+    if ($perpage > 0) {
+        $pagedusers = array_slice($filteredcohortusers, $page * $perpage, $perpage, true);
+    } else {
+        $pagedusers = $filteredcohortusers;
+    }
+
+    $userids = array_keys($pagedusers);
+    $pagedcustomfields = !empty($userids) ? report_idgprogress_get_users_custom_fields($userids) : [];
+    $sitecustomfields = report_idgprogress_get_custom_profile_fields();
+    $courseusergroups = report_idgprogress_get_course_user_groups($course->id);
+    $courseuserroles = report_idgprogress_get_course_user_roles($context->id);
+    $courselastaccess = report_idgprogress_get_course_lastaccess($course->id);
+
+    // Format tracked activities list.
+    $trackedlist = [];
+    foreach ($trackedactivities as $cmid => $act) {
+        $trackedlist[] = [
+            'id'      => (int)$cmid,
+            'name'    => strip_tags(format_string($act->name, true, ['context' => $context])),
+            'modname' => (string)$act->modname,
+        ];
+    }
+
+    // Format participants list.
+    $participantslist = [];
+    foreach ($pagedusers as $user) {
+        $sdata = report_idgprogress_get_student_completion_data(
+            $course,
+            $completion,
+            $trackedactivities,
+            $user,
+            $cohortcache
+        );
+
+        $ucustom = $pagedcustomfields[$user->id] ?? [];
+        $phone = !empty($user->phone1) ? (string)$user->phone1 : (!empty($user->phone2) ? (string)$user->phone2 : '');
+        $department = !empty($user->department) ? (string)$user->department : '';
+        $institution = !empty($user->institution) ? (string)$user->institution : '';
+        $ugroups = $courseusergroups[$user->id] ?? [];
+        $uroles = $courseuserroles[$user->id] ?? [];
+        $timeaccess = $courselastaccess[$user->id] ?? 0;
+        $lastaccessstr = $timeaccess > 0 ? format_time(time() - $timeaccess) : get_string('never');
+
+        $timecompleted = ($sdata->status === 'completed' && $sdata->timecompleted > 0) ? (int)$sdata->timecompleted : 0;
+        $timecompletedstr = $timecompleted > 0 ? userdate($timecompleted, get_string('strftimedatetime', 'langconfig')) : '';
+
+        $lastacttime = (!empty($sdata->lastactivitytime) && $sdata->lastactivitytime > 0) ? (int)$sdata->lastactivitytime : 0;
+        $lastacttimestr = $lastacttime > 0 ? userdate($lastacttime, get_string('strftimedatetime', 'langconfig')) : '';
+
+        // Custom fields array.
+        $customfieldslist = [];
+        foreach ($sitecustomfields as $cf) {
+            $val = !empty($ucustom[$cf->shortname]) ? (string)$ucustom[$cf->shortname] : '';
+            $customfieldslist[] = [
+                'shortname' => (string)$cf->shortname,
+                'name'      => strip_tags(format_string($cf->name, true, ['context' => $context])),
+                'value'     => $val,
+            ];
+        }
+
+        // Per-activity breakdown if requested.
+        $actdetails = [];
+        if ($includeactivities && !empty($trackedactivities)) {
+            foreach ($trackedactivities as $cmid => $act) {
+                $iscomp = false;
+                $acttime = 0;
+                $acttimestr = '';
+                if (isset($sdata->activitystates[$cmid])) {
+                    $astate = $sdata->activitystates[$cmid];
+                    $iscomp = (bool)$astate->iscompleted;
+                    $acttime = (int)$astate->timemodified;
+                    if ($acttime > 0) {
+                        $acttimestr = userdate($acttime, get_string('strftimedatetime', 'langconfig'));
+                    }
+                }
+                $actdetails[] = [
+                    'cmid'                   => (int)$cmid,
+                    'name'                   => strip_tags(format_string($act->name, true, ['context' => $context])),
+                    'iscompleted'            => $iscomp,
+                    'timemodified'           => $acttime,
+                    'timemodified_formatted' => $acttimestr,
+                ];
+            }
+        }
+
+        $participantslist[] = [
+            'id'                         => (int)$user->id,
+            'username'                   => (string)$user->username,
+            'firstname'                  => (string)$user->firstname,
+            'lastname'                   => (string)$user->lastname,
+            'fullname'                   => (string)fullname($user),
+            'email'                      => (string)$user->email,
+            'phone'                      => $phone,
+            'department'                 => $department,
+            'institution'                => $institution,
+            'roles'                      => !empty($uroles) ? implode(', ', $uroles) : get_string('student', 'moodle', 'Student'),
+            'groups'                     => !empty($ugroups) ? implode(', ', $ugroups) : get_string('nogroups', 'group'),
+            'lastaccess'                 => (int)$timeaccess,
+            'lastaccess_formatted'       => (string)$lastaccessstr,
+            'completed_activities'       => (int)$sdata->completedactivities,
+            'total_activities'           => (int)$sdata->totalactivities,
+            'percentage'                 => (int)$sdata->percentage,
+            'status'                     => (string)$sdata->status,
+            'status_label'               => (string)get_string('status_' . $sdata->status, 'report_idgprogress'),
+            'timecompleted'              => $timecompleted,
+            'timecompleted_formatted'    => $timecompletedstr,
+            'lastactivitytime'           => $lastacttime,
+            'lastactivitytime_formatted' => $lastacttimestr,
+            'custom_fields'              => $customfieldslist,
+            'activities_detail'          => $actdetails,
+        ];
+    }
+
+    return [
+        'course' => [
+            'id'                 => (int)$course->id,
+            'fullname'           => (string)format_string($course->fullname, true, ['context' => $context]),
+            'shortname'          => (string)format_string($course->shortname, true, ['context' => $context]),
+            'completion_enabled' => (bool)$iscompletionenabled,
+        ],
+        'summary' => [
+            'total_enrolled' => (int)$metrics->totalenrolled,
+            'completed'      => (int)$metrics->completedcount,
+            'in_progress'    => (int)$metrics->inprogresscount,
+            'not_started'    => (int)$metrics->notstartedcount,
+            'avg_progress'   => (float)$metrics->avgprogress,
+        ],
+        'tracked_activities' => $trackedlist,
+        'total_participants' => (int)$totalparticipants,
+        'participants'       => $participantslist,
+    ];
+}
+
+/**
+ * Retrieve detailed single-student progress payload for API.
+ *
+ * @param stdClass $course Course record.
+ * @param context_course $context Course context.
+ * @param int $userid User ID.
+ * @return array Formatted student progress record.
+ */
+function report_idgprogress_get_api_user_progress_data(
+    stdClass $course,
+    context_course $context,
+    int $userid
+): array {
+    global $CFG, $DB;
+    require_once($CFG->libdir . '/completionlib.php');
+
+    $user = $DB->get_record('user', ['id' => $userid, 'deleted' => 0], '*', MUST_EXIST);
+    $completion = new completion_info($course);
+    $iscompletionenabled = $completion->is_enabled();
+    $trackedactivities = $iscompletionenabled ? report_idgprogress_get_tracked_activities($completion) : [];
+
+    $sdata = report_idgprogress_get_student_completion_data(
+        $course,
+        $completion,
+        $trackedactivities,
+        $user,
+        null
+    );
+
+    $allcustom = report_idgprogress_get_users_custom_fields([$user->id]);
+    $usercustom = $allcustom[$user->id] ?? [];
+    $sitecustomfields = report_idgprogress_get_custom_profile_fields();
+    $courseusergroups = report_idgprogress_get_course_user_groups($course->id);
+    $courseuserroles = report_idgprogress_get_course_user_roles($context->id);
+    $courselastaccess = report_idgprogress_get_course_lastaccess($course->id);
+
+    $phone = !empty($user->phone1) ? (string)$user->phone1 : (!empty($user->phone2) ? (string)$user->phone2 : '');
+    $department = !empty($user->department) ? (string)$user->department : '';
+    $institution = !empty($user->institution) ? (string)$user->institution : '';
+    $ugroups = $courseusergroups[$user->id] ?? [];
+    $uroles = $courseuserroles[$user->id] ?? [];
+    $timeaccess = $courselastaccess[$user->id] ?? 0;
+    $lastaccessstr = $timeaccess > 0 ? format_time(time() - $timeaccess) : get_string('never');
+
+    $timecompleted = ($sdata->status === 'completed' && $sdata->timecompleted > 0) ? (int)$sdata->timecompleted : 0;
+    $timecompletedstr = $timecompleted > 0 ? userdate($timecompleted, get_string('strftimedatetime', 'langconfig')) : '';
+
+    $lastacttime = (!empty($sdata->lastactivitytime) && $sdata->lastactivitytime > 0) ? (int)$sdata->lastactivitytime : 0;
+    $lastacttimestr = $lastacttime > 0 ? userdate($lastacttime, get_string('strftimedatetime', 'langconfig')) : '';
+
+    $customfieldslist = [];
+    foreach ($sitecustomfields as $cf) {
+        $val = !empty($usercustom[$cf->shortname]) ? (string)$usercustom[$cf->shortname] : '';
+        $customfieldslist[] = [
+            'shortname' => (string)$cf->shortname,
+            'name'      => strip_tags(format_string($cf->name, true, ['context' => $context])),
+            'value'     => $val,
+        ];
+    }
+
+    $actdetails = [];
+    foreach ($trackedactivities as $cmid => $act) {
+        $iscomp = false;
+        $acttime = 0;
+        $acttimestr = '';
+        if (isset($sdata->activitystates[$cmid])) {
+            $astate = $sdata->activitystates[$cmid];
+            $iscomp = (bool)$astate->iscompleted;
+            $acttime = (int)$astate->timemodified;
+            if ($acttime > 0) {
+                $acttimestr = userdate($acttime, get_string('strftimedatetime', 'langconfig'));
+            }
+        }
+        $actdetails[] = [
+            'cmid'                   => (int)$cmid,
+            'name'                   => strip_tags(format_string($act->name, true, ['context' => $context])),
+            'iscompleted'            => $iscomp,
+            'timemodified'           => $acttime,
+            'timemodified_formatted' => $acttimestr,
+        ];
+    }
+
+    return [
+        'course' => [
+            'id'                 => (int)$course->id,
+            'fullname'           => (string)format_string($course->fullname, true, ['context' => $context]),
+            'shortname'          => (string)format_string($course->shortname, true, ['context' => $context]),
+            'completion_enabled' => (bool)$iscompletionenabled,
+        ],
+        'student' => [
+            'id'                         => (int)$user->id,
+            'username'                   => (string)$user->username,
+            'firstname'                  => (string)$user->firstname,
+            'lastname'                   => (string)$user->lastname,
+            'fullname'                   => (string)fullname($user),
+            'email'                      => (string)$user->email,
+            'phone'                      => $phone,
+            'department'                 => $department,
+            'institution'                => $institution,
+            'roles'                      => !empty($uroles) ? implode(', ', $uroles) : get_string('student', 'moodle', 'Student'),
+            'groups'                     => !empty($ugroups) ? implode(', ', $ugroups) : get_string('nogroups', 'group'),
+            'lastaccess'                 => (int)$timeaccess,
+            'lastaccess_formatted'       => (string)$lastaccessstr,
+            'completed_activities'       => (int)$sdata->completedactivities,
+            'total_activities'           => (int)$sdata->totalactivities,
+            'percentage'                 => (int)$sdata->percentage,
+            'status'                     => (string)$sdata->status,
+            'status_label'               => (string)get_string('status_' . $sdata->status, 'report_idgprogress'),
+            'timecompleted'              => $timecompleted,
+            'timecompleted_formatted'    => $timecompletedstr,
+            'lastactivitytime'           => $lastacttime,
+            'lastactivitytime_formatted' => $lastacttimestr,
+            'custom_fields'              => $customfieldslist,
+            'activities_detail'          => $actdetails,
+        ],
+    ];
+}
+
+
 
